@@ -1,0 +1,457 @@
+:root {
+  --bg: #fdf6ee;
+  --card-bg: #ffffff;
+  --ink: #2a1e17;
+  --ink-dim: #7a6a5c;
+  --accent: #b3272d;
+  --accent-dark: #8f1f24;
+  --gold: #c9a24b;
+  --border: #e8dcc8;
+  --correct: #2e7d32;
+  --correct-bg: #e8f5e9;
+  --wrong: #c62828;
+  --wrong-bg: #fdecea;
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1512;
+    --card-bg: #241b16;
+    --ink: #f2e9dd;
+    --ink-dim: #b4a493;
+    --accent: #e05a52;
+    --accent-dark: #c94a44;
+    --gold: #d9b968;
+    --border: #3a2d24;
+    --correct: #7bd389;
+    --correct-bg: #1c3320;
+    --wrong: #ff8a80;
+    --wrong-bg: #3a1f1d;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 48px;
+}
+
+.app {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Everything except the play-area (card + sidebar) stays narrow and
+   centered, matching the original single-column layout. */
+.app-header,
+.range-select,
+.mistakes-bar,
+.stats-bar,
+.hint {
+  width: 100%;
+  max-width: 480px;
+}
+
+.app-header {
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.app-header .dim {
+  color: var(--gold);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+.range-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.range-btn {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--ink);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.range-btn:hover {
+  border-color: var(--accent);
+}
+
+.range-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.mistakes-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.btn-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.btn-link:disabled {
+  color: var(--ink-dim);
+  cursor: default;
+  opacity: 0.6;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: space-around;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.play-area {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.card {
+  flex: 1 1 320px;
+  min-width: 0;
+  max-width: 480px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 760px) {
+  .play-area {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card {
+    max-width: none;
+  }
+
+  .lookup-panel {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+}
+
+.hanzi {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+  min-height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.answer-form {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.pinyin-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px;
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.pinyin-input:focus {
+  border-color: var(--accent);
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feedback {
+  min-height: 1.6em;
+  width: 100%;
+  text-align: center;
+  font-size: 1.05rem;
+  border-radius: 10px;
+  padding: 0;
+  transition: padding 0.15s;
+}
+
+.feedback.correct,
+.feedback.wrong {
+  padding: 10px 12px;
+}
+
+.feedback.correct {
+  background: var(--correct-bg);
+  color: var(--correct);
+  font-weight: 500;
+}
+
+.feedback.wrong {
+  background: var(--wrong-bg);
+  color: var(--wrong);
+  font-weight: 500;
+}
+
+.feedback .answer-pinyin {
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 2.1em;
+  line-height: 1.7;
+  display: inline-block;
+}
+
+.practice-note {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.practice-note.correct {
+  color: var(--correct);
+}
+
+.practice-note.wrong {
+  color: var(--wrong);
+}
+
+.use-cases {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--ink-dim);
+  line-height: 1.6;
+}
+
+.use-cases-title {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.7rem;
+  margin-bottom: 2px;
+}
+
+.actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.hint {
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.hint code {
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.9rem;
+}
+
+.lookup-panel {
+  width: 260px;
+  flex: 0 0 260px;
+  align-self: stretch;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lookup-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.lookup-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.lookup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lookup-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 1.1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.lookup-input:focus {
+  border-color: var(--accent);
+}
+
+.lookup-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lookup-row {
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.lookup-row.learned {
+  background: var(--correct-bg);
+  color: var(--correct);
+}
+
+.lookup-row.unlearned,
+.lookup-row.invalid {
+  background: var(--wrong-bg);
+  color: var(--wrong);
+}
+
+.lookup-chars {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-weight: 700;
+  font-size: 1.2em;
+}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>老師 · Chinese Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>老師 <span class="dim">·</span> Chinese Practice</h1>
+      <p class="subtitle">Type the exact pinyin (with tone) for what's shown &middot; Traditional Chinese</p>
+    </header>
+
+    <nav class="range-select" id="rangeSelect">
+      <button class="range-btn" data-range="0-9">0–9</button>
+      <button class="range-btn" data-range="10-99">10–99</button>
+      <button class="range-btn active" data-range="0-99">0–99</button>
+      <button class="range-btn" data-range="words">Words</button>
+      <button class="range-btn" data-range="homophones">Homophones</button>
+      <button class="range-btn" data-range="combo">Combo</button>
+      <button class="range-btn" data-range="mistakes">Mistakes</button>
+    </nav>
+
+    <div class="mistakes-bar">
+      <span id="mistakeCount">0 mistakes saved</span>
+      <button type="button" class="btn-link" id="resetMistakesBtn">Reset</button>
+    </div>
+
+    <section class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="scoreValue">0 / 0</span>
+        <span class="stat-label">Score</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="streakValue">0</span>
+        <span class="stat-label">Streak</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="bestValue">0</span>
+        <span class="stat-label">Best</span>
+      </div>
+    </section>
+
+    <div class="play-area">
+      <main class="card">
+        <div class="hanzi" id="hanziDisplay" lang="zh-Hant">…</div>
+
+        <form id="answerForm" class="answer-form" autocomplete="off">
+          <input
+            type="text"
+            id="pinyinInput"
+            class="pinyin-input"
+            placeholder="e.g. sa1n shi2 wu3"
+            autocapitalize="off"
+            spellcheck="false"
+          >
+          <button type="submit" class="btn btn-primary" id="submitBtn">Check</button>
+        </form>
+
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+
+        <div class="actions">
+          <button class="btn btn-ghost" id="skipBtn">Skip / Show answer</button>
+          <button class="btn btn-primary hidden" id="nextBtn">Next →</button>
+        </div>
+      </main>
+
+      <aside class="lookup-panel hidden" id="lookupPanel">
+        <h2 class="lookup-title">Quick Reference</h2>
+        <p class="lookup-sub">Type pinyin to see if you've learned the character for it.</p>
+        <form id="lookupForm" class="lookup-form" autocomplete="off">
+          <input
+            type="text"
+            id="lookupInput"
+            class="lookup-input"
+            placeholder="e.g. ni3 hao3"
+            autocapitalize="off"
+            spellcheck="false"
+          >
+          <button type="submit" class="btn btn-primary">Look up</button>
+        </form>
+        <div class="lookup-result" id="lookupResult"></div>
+      </aside>
+    </div>
+
+    <footer class="hint">
+      Type each syllable separated by a space. Put the tone number (1–4)
+      right after the letter that carries the mark &mdash; not just at the end.
+      <br>三十五 → <code>sa1n shi2 wu3</code> (sān shí wǔ).
+      <br>二 → <code>e4r</code>, not <code>er4</code>. 零 → <code>li2ng</code>, not <code>ling2</code>.
+      <br>Typed tone marks (āáǎà…) also work, e.g. <code>sān shí wǔ</code>.
+      <br>For ü, type <code>v</code> &mdash; 綠 → <code>lv4</code> (lǜ).
+      <br><strong>Homophones</strong>: characters that sound alike but differ in tone,
+      shown together &mdash; e.g. 七氣起期 → <code>qi1 qi4 qi3 qi2</code>.
+      <strong>Combo</strong>: two random characters mashed together, real word or not.
+      Both show a real word each character is used in ("Used in:") alongside the answer.
+      <strong>Mistakes</strong>: everything you've gotten wrong or skipped, from any mode &mdash;
+      answer one correctly and it drops off the list. Homophone/Combo mistakes still show
+      their "Used in:" examples too.
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

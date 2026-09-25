@@ -1,0 +1,5 @@
+# Class slides are the teacher's copyrighted material — kept local, never published.
+class_material/
+
+# Local dev-server config (not needed by the deployed site)
+.claude/
