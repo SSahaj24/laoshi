@@ -54,13 +54,13 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-15), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-17), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
-// entered with PDF 12-13, and 紅/烏/龍/喜/要 with PDF 15's third grid page.
-// Still left out: characters past the red divider (妳/您/她/哪/家, introduced
-// in PDF 15 but not yet reviewed), and anything sourced only from title
-// slides or example sentences (e.g. 第/課 from "第一課", 起 from "一起").
+// entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, and 妳/您/她/哪/家/呢/很
+// with PDF 17, whose divider now sits at the end of the third grid page.
+// Still left out: anything sourced only from title slides or example
+// sentences (e.g. 第/課 from "第一課", 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
 // 謝 in 謝謝, or 的/子/個/了/嗎/們) carry no accent, matching how the slides
 // themselves mark them. 不 appears twice with different tones — bù in 不可以
@@ -140,6 +140,13 @@ const WORD_DEFS = [
   [{ ch: "烏", accented: "wū" }, { ch: "龍", accented: "lóng" }, { ch: "茶", accented: "chá" }], // 烏龍茶 oolong tea
   [{ ch: "喜", accented: "xǐ" }, { ch: "歡", accented: "huān" }], // 喜歡 to like
   [{ ch: "要", accented: "yào" }], // 要 to want
+  [{ ch: "妳", accented: "nǐ" }], // 妳 you (addressing a woman)
+  [{ ch: "您", accented: "nín" }], // 您 you (polite)
+  [{ ch: "她", accented: "tā" }], // 她 she
+  [{ ch: "哪", accented: "nǎ" }], // 哪 which
+  [{ ch: "國", accented: "guó" }, { ch: "家", accented: "jiā" }], // 國家 country
+  [{ ch: "呢", accented: "ne" }], // 呢 ...and you? (question particle)
+  [{ ch: "很", accented: "hěn" }], // 很 very
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -256,7 +263,9 @@ const HOMOPHONE_GROUPS = (() => {
     byBase.get(base).push(entry);
   }
   return [...byBase.values()]
-    .filter((group) => group.length >= 2)
+    // Two different tones is the whole point — 你/妳 and 他/她 share a base
+    // *and* a tone, so pairing them would test nothing.
+    .filter((group) => new Set(group.map((e) => e.accented)).size >= 2)
     .map((group, i) => makeEntry(group, `homo-${i}`));
 })();
 
