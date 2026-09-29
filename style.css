@@ -455,3 +455,22 @@ body {
   font-weight: 700;
   font-size: 1.2em;
 }
+
+/* Phone sizing. Must stay last: the base .pinyin-input rule sits further up
+   the file, so an earlier media query would lose on source order.
+   A 3rem box only fits a few characters at 375px, hiding what's being typed. */
+@media (max-width: 480px) {
+  /* Stack the button under the input so the answer gets the full card width. */
+  .answer-form {
+    flex-direction: column;
+  }
+
+  .pinyin-input {
+    font-size: 1.9rem;
+    padding: 12px;
+  }
+
+  .hint {
+    font-size: 0.72rem;
+  }
+}
