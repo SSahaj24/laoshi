@@ -349,6 +349,106 @@ body {
   margin-bottom: 2px;
 }
 
+/* ---- Word Order ---- */
+
+.sentence-builder {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card.sentence-mode .sentence-builder {
+  display: flex;
+}
+
+.card.sentence-mode .hanzi,
+.card.sentence-mode .pinyin-input {
+  display: none;
+}
+
+.card.sentence-mode .answer-form .btn {
+  flex: 1;
+}
+
+/* The line the sentence is written on. */
+.sentence-answer {
+  min-height: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 2px;
+  border-bottom: 2px dashed var(--border);
+}
+
+.sentence-answer:empty::before {
+  content: "Tap the words in order";
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+.sentence-bank {
+  min-height: 56px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chunk {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-size: 1.45rem;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 0 var(--border);
+  transition: border-color 0.15s, transform 0.05s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chunk:hover {
+  border-color: var(--accent);
+}
+
+.chunk:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.sentence-answer .chunk {
+  background: var(--card-bg);
+  border-color: var(--accent);
+}
+
+.sentence-reveal {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sentence-hanzi {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-size: 1.6em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.sentence-pinyin {
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 1.15em;
+}
+
+.sentence-gloss {
+  font-size: 0.85em;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
 .actions {
   width: 100%;
   display: flex;
@@ -364,7 +464,21 @@ body {
   text-align: center;
   color: var(--ink-dim);
   font-size: 0.78rem;
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.hint p {
+  margin: 0 0 7px;
+}
+
+.hint .modes {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.hint .modes strong {
+  color: var(--ink);
 }
 
 .hint code {

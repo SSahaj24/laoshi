@@ -17,13 +17,12 @@
     </header>
 
     <nav class="range-select" id="rangeSelect">
-      <button class="range-btn" data-range="0-9">0–9</button>
-      <button class="range-btn" data-range="10-99">10–99</button>
-      <button class="range-btn active" data-range="0-99">0–99</button>
+      <button class="range-btn active" data-range="numbers">Numbers</button>
       <button class="range-btn" data-range="words">Words</button>
-      <button class="range-btn" data-range="homophones">Homophones</button>
-      <button class="range-btn" data-range="combo">Combo</button>
-      <button class="range-btn" data-range="mistakes">Mistakes</button>
+      <button class="range-btn" data-range="sentences">Word Order</button>
+      <button class="range-btn" data-range="homophones">Tone Pairs</button>
+      <button class="range-btn" data-range="combo">Random Mix</button>
+      <button class="range-btn" data-range="mistakes">My Mistakes</button>
     </nav>
 
     <div class="mistakes-bar">
@@ -49,6 +48,11 @@
     <div class="play-area">
       <main class="card">
         <div class="hanzi" id="hanziDisplay" lang="zh-Hant">…</div>
+
+        <div class="sentence-builder" id="sentenceBuilder">
+          <div class="sentence-answer" id="sentenceAnswer" aria-label="Your sentence" aria-live="polite"></div>
+          <div class="sentence-bank" id="sentenceBank" aria-label="Words to place"></div>
+        </div>
 
         <form id="answerForm" class="answer-form" autocomplete="off">
           <input
@@ -89,19 +93,25 @@
     </div>
 
     <footer class="hint">
-      Type each syllable separated by a space. Put the tone number (1–4)
-      right after the letter that carries the mark &mdash; not just at the end.
-      <br>三十五 → <code>sa1n shi2 wu3</code> (sān shí wǔ).
-      <br>二 → <code>e4r</code>, not <code>er4</code>. 零 → <code>li2ng</code>, not <code>ling2</code>.
-      <br>Typed tone marks (āáǎà…) also work, e.g. <code>sān shí wǔ</code>.
-      <br>For ü, type <code>v</code> &mdash; 綠 → <code>lv4</code> (lǜ).
-      <br><strong>Homophones</strong>: characters that sound alike but differ in tone,
-      shown together &mdash; e.g. 七氣起期 → <code>qi1 qi4 qi3 qi2</code>.
-      <strong>Combo</strong>: two random characters mashed together, real word or not.
-      Both show a real word each character is used in ("Used in:") alongside the answer.
-      <strong>Mistakes</strong>: everything you've gotten wrong or skipped, from any mode &mdash;
-      answer one correctly and it drops off the list. Homophone/Combo mistakes still show
-      their "Used in:" examples too.
+      <p>Separate syllables with spaces, and put the tone number (1–4) right after
+      the letter that carries the mark &mdash; not at the end of the syllable.</p>
+      <p>
+        三十五 <code>sa1n shi2 wu3</code> &middot;
+        二 <code>e4r</code> &middot;
+        零 <code>li2ng</code> &middot;
+        綠 <code>lv4</code> (v for ü)
+      </p>
+      <p>Typed tone marks work too &mdash; <code>sān shí wǔ</code>.</p>
+      <p class="modes">
+        <strong>Word Order</strong> tap the words into a correct sentence, like the
+        weekly test. Tap a placed word to send it back.
+        <strong>Tone Pairs</strong> same syllable, different tones
+        (七氣起期 → <code>qi1 qi4 qi3 qi2</code>).
+        <strong>Random Mix</strong> two random characters, real word or not.
+        <strong>My Mistakes</strong> anything you got wrong or skipped &mdash; answer it
+        correctly and it drops off. The first two also show a real word each character
+        appears in.
+      </p>
     </footer>
   </div>
 

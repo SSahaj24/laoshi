@@ -303,14 +303,94 @@ const CHAR_EXAMPLES = (() => {
 })();
 
 // ---------------------------------------------------------------------------
+// Word Order: the weekly test's rearrange-the-sentence format
+// (class_material/17, slide 25). Chunks follow the slide's own cuts — 是 and
+// 不是 stay separate, so a V-not-V question has to be rebuilt, not recognised.
+// `alts` lists other orders that are just as grammatical, so a valid answer
+// is never marked wrong. Every character must already be in CHAR_INDEX.
+// ---------------------------------------------------------------------------
+
+const SENTENCE_DEFS = [
+  // The five from the test slide itself.
+  { chunks: ["請問", "你", "是", "不是", "日本人"], end: "？", gloss: "Excuse me, are you Japanese?" },
+  { chunks: ["綠茶", "很", "好喝"], end: "。", gloss: "Green tea is delicious." },
+  { chunks: ["我", "很", "喜歡", "喝", "咖啡"], end: "。", gloss: "I really like drinking coffee." },
+  { chunks: ["陳先生", "不", "是", "美國人", "嗎"], end: "？", gloss: "Isn't Mr. Chen American?" },
+  { chunks: ["歡迎", "你", "來", "台灣"], end: "。", gloss: "Welcome to Taiwan." },
+  // Same patterns, built from the rest of the syllabus.
+  {
+    chunks: ["妳的", "生日", "是", "不是", "明天"],
+    alts: [["明天", "是", "不是", "妳的", "生日"]],
+    end: "？",
+    gloss: "Is your birthday tomorrow?",
+  },
+  { chunks: ["那個", "房子", "很", "美"], end: "。", gloss: "That house is beautiful." },
+  { chunks: ["他", "有", "沒有", "手機"], end: "？", gloss: "Does he have a mobile phone?" },
+  { chunks: ["你", "喜", "不喜歡", "喝", "烏龍茶"], end: "？", gloss: "Do you like oolong tea?" },
+  {
+    chunks: ["今天", "我", "要", "回家"],
+    alts: [["我", "今天", "要", "回家"]],
+    end: "。",
+    gloss: "I'm going home today.",
+  },
+  { chunks: ["那個", "小姐", "是", "哪國人"], end: "？", gloss: "What nationality is that woman?" },
+  {
+    chunks: ["我們", "去", "接", "老師"],
+    alts: [["老師", "去", "接", "我們"]],
+    end: "。",
+    gloss: "We're going to pick up the teacher.",
+  },
+  { chunks: ["你們", "有沒有", "我的", "電話號碼"], end: "？", gloss: "Do you have my phone number?" },
+  { chunks: ["這個", "牛奶", "很", "好喝"], end: "。", gloss: "This milk is delicious." },
+  {
+    chunks: ["我", "喝", "紅茶，", "你", "呢"],
+    alts: [["你", "喝", "紅茶，", "我", "呢"]],
+    end: "？",
+    gloss: "I drink black tea — and you?",
+  },
+];
+
+const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
+const FOURTH_TONE_RE = /[àèìòùǜ]/;
+
+// Word-segmented pinyin ("qǐngwèn nǐ shì búshì rìběnrén?"). 不 is resolved
+// across the whole sentence first, since the syllable that decides bù vs bú
+// can sit in the next chunk (陳先生 / 不 / 是).
+function sentencePinyin(chunks, end) {
+  const chars = chunks.flatMap((c) => [...c].filter((ch) => CHAR_PINYIN.has(ch)));
+  const syl = chars.map((ch) => CHAR_PINYIN.get(ch));
+  chars.forEach((ch, i) => {
+    if (ch === "不") syl[i] = FOURTH_TONE_RE.test(syl[i + 1] || "") ? "bú" : "bù";
+  });
+  let k = 0;
+  const words = chunks.map((c) => {
+    const cjk = [...c].filter((ch) => CHAR_PINYIN.has(ch));
+    const missing = [...c].filter((ch) => /\p{Script=Han}/u.test(ch) && !CHAR_PINYIN.has(ch));
+    if (missing.length) console.error(`Word Order: ${missing.join("")} in "${c}" is not in the syllabus`);
+    const word = cjk.map(() => syl[k++]).join("");
+    return c.endsWith("，") ? `${word},` : word;
+  });
+  return words.join(" ") + (end === "？" ? "?" : ".");
+}
+
+const SENTENCES = SENTENCE_DEFS.map((def, i) => ({
+  value: `sent-${i}`,
+  kind: "sentence",
+  chunks: def.chunks,
+  accepted: [def.chunks, ...(def.alts || [])].map((order) => order.join("")),
+  gloss: def.gloss,
+  hanzi: def.chunks.join("") + def.end,
+  pinyinDisplay: sentencePinyin(def.chunks, def.end),
+}));
+
+// ---------------------------------------------------------------------------
 // Game state
 // ---------------------------------------------------------------------------
 
 const RANGES = {
-  "0-9": ALL_NUMBERS.slice(0, 10),
-  "10-99": ALL_NUMBERS.slice(10, 100),
-  "0-99": ALL_NUMBERS,
+  numbers: ALL_NUMBERS,
   words: WORDS,
+  sentences: SENTENCES,
   homophones: HOMOPHONE_GROUPS,
   combo: COMBO_PAIRS,
 };
@@ -319,7 +399,7 @@ const RANGES = {
 // mistake logged in any mode can be looked back up regardless of which pool
 // it originally came from. "mistakes" itself isn't a fixed RANGES entry —
 // it's rebuilt from state.mistakes each time (see mistakesPool()).
-const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS];
+const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS];
 const ENTRY_BY_VALUE = new Map(ALL_ENTRIES.map((e) => [e.value, e]));
 
 function mistakesPool() {
@@ -347,8 +427,8 @@ function saveMistakes() {
 }
 
 const state = {
-  range: "0-99",
-  pool: RANGES["0-99"],
+  range: "numbers",
+  pool: RANGES.numbers,
   deck: [], // shuffled-bag queue for the current pool — see pickNext()
   current: null,
   answered: false,
@@ -390,7 +470,11 @@ function saveBest(val) {
 // DOM wiring
 // ---------------------------------------------------------------------------
 
+const card = document.querySelector(".card");
 const hanziDisplay = document.getElementById("hanziDisplay");
+const sentenceBuilder = document.getElementById("sentenceBuilder");
+const sentenceAnswer = document.getElementById("sentenceAnswer");
+const sentenceBank = document.getElementById("sentenceBank");
 const answerForm = document.getElementById("answerForm");
 const pinyinInput = document.getElementById("pinyinInput");
 const submitBtn = document.getElementById("submitBtn");
@@ -468,7 +552,14 @@ function pickNext() {
   const next = drawNext();
   state.current = next;
   state.answered = false;
-  hanziDisplay.textContent = next.hanzi;
+  const sentence = isSentence(next);
+  card.classList.toggle("sentence-mode", sentence);
+  if (sentence) {
+    hanziDisplay.textContent = "";
+    renderSentence(next);
+  } else {
+    hanziDisplay.textContent = next.hanzi;
+  }
   pinyinInput.value = "";
   feedback.textContent = "";
   feedback.className = "feedback";
@@ -476,8 +567,83 @@ function pickNext() {
   skipBtn.classList.remove("hidden");
   submitBtn.disabled = false;
   pinyinInput.disabled = false;
-  pinyinInput.focus();
+  if (!sentence) pinyinInput.focus();
   state.gradedValue = null;
+}
+
+// ---------------------------------------------------------------------------
+// Word Order tiles. Tap a chunk in the bank to append it to the sentence;
+// tap a placed chunk to send it back. Tapping beats drag-and-drop on a phone.
+// ---------------------------------------------------------------------------
+
+function isSentence(entry) {
+  return entry?.kind === "sentence";
+}
+
+function makeChunk(text, order) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chunk";
+  b.lang = "zh-Hant";
+  b.textContent = text;
+  b.dataset.order = order;
+  return b;
+}
+
+function renderSentence(entry) {
+  // Reshuffle if the deal happens to come out already solved.
+  let order = shuffled(entry.chunks);
+  for (let i = 0; i < 10 && entry.accepted.includes(order.join("")); i++) {
+    order = shuffled(entry.chunks);
+  }
+  sentenceAnswer.replaceChildren();
+  sentenceBank.replaceChildren(...order.map(makeChunk));
+}
+
+function arrangement() {
+  return [...sentenceAnswer.children].map((c) => c.textContent).join("");
+}
+
+// Keep the bank's layout stable: a returned chunk goes back to its own slot.
+function returnToBank(chunk) {
+  const after = [...sentenceBank.children].find((c) => +c.dataset.order > +chunk.dataset.order);
+  sentenceBank.insertBefore(chunk, after || null);
+}
+
+function moveChunk(chunk) {
+  if (chunk.parentElement === sentenceBank) sentenceAnswer.appendChild(chunk);
+  else returnToBank(chunk);
+  if (!state.answered) {
+    feedback.textContent = "";
+    feedback.className = "feedback";
+  }
+}
+
+// Mirrors the pinyin path: before grading, Check grades; after grading, an
+// unchanged arrangement moves on and a changed one is a practice re-check
+// that never touches score or streak.
+function submitSentence() {
+  const built = arrangement();
+  const complete = sentenceBank.children.length === 0;
+  if (state.answered) {
+    if (built === state.gradedValue) {
+      pickNext();
+      return;
+    }
+    if (!complete) return;
+    const isCorrect = state.current.accepted.includes(built);
+    showPracticeCheck(isCorrect);
+    if (isCorrect) clearMistake(state.current.value);
+    state.gradedValue = built;
+    return;
+  }
+  if (!complete) {
+    feedback.className = "feedback";
+    feedback.textContent = "Use all the words first.";
+    return;
+  }
+  gradeAnswer(state.current.accepted.includes(built));
+  state.gradedValue = built;
 }
 
 // Shown instead of a question when the Mistakes pool is empty — either
@@ -485,6 +651,7 @@ function pickNext() {
 function showEmptyMistakes() {
   state.current = null;
   state.answered = true;
+  card.classList.remove("sentence-mode");
   hanziDisplay.textContent = "🎉";
   feedback.className = "feedback correct";
   feedback.textContent = "No mistakes saved — get one wrong or skipped in any mode to add it here.";
@@ -556,14 +723,27 @@ function clearMistake(value) {
   refreshMistakesPoolIfActive();
 }
 
+function answerHtml(entry) {
+  if (isSentence(entry)) {
+    return (
+      `<div class="sentence-reveal">` +
+      `<div class="sentence-hanzi" lang="zh-Hant">${entry.hanzi}</div>` +
+      `<div class="sentence-pinyin">${entry.pinyinDisplay}</div>` +
+      `<div class="sentence-gloss">${entry.gloss}</div>` +
+      `</div>`
+    );
+  }
+  return `<span class="answer-pinyin">${entry.pinyinDisplay}</span>`;
+}
+
 function showFeedback(isCorrect) {
-  const answerHtml = `<span class="answer-pinyin">${state.current.pinyinDisplay}</span>`;
+  const answer = answerHtml(state.current);
   if (isCorrect) {
     feedback.className = "feedback correct";
-    feedback.innerHTML = `Correct! ${answerHtml}`;
+    feedback.innerHTML = `Correct! ${answer}`;
   } else {
     feedback.className = "feedback wrong";
-    feedback.innerHTML = `Not quite — it's ${answerHtml}`;
+    feedback.innerHTML = `Not quite — it's ${answer}`;
   }
   appendUseCases();
 }
@@ -580,8 +760,36 @@ function showPracticeCheck(isCorrect) {
   feedback.appendChild(note);
 }
 
+// First-time grading, shared by the pinyin and Word Order paths.
+function gradeAnswer(isCorrect) {
+  state.answered = true;
+  state.total += 1;
+  if (isCorrect) {
+    state.correct += 1;
+    state.streak += 1;
+    if (state.streak > state.best) {
+      state.best = state.streak;
+      saveBest(state.best);
+    }
+    clearMistake(state.current.value);
+  } else {
+    state.streak = 0;
+    addMistake(state.current.value);
+  }
+  revealLookupPanel();
+  showFeedback(isCorrect);
+  updateStats();
+  nextBtn.classList.remove("hidden");
+}
+
 function submitAnswer(e) {
   e.preventDefault();
+  if (!state.current) return;
+
+  if (isSentence(state.current)) {
+    submitSentence();
+    return;
+  }
 
   if (state.answered) {
     // Hitting Enter again without changing the input (e.g. right after
@@ -601,28 +809,7 @@ function submitAnswer(e) {
   }
 
   const userSyllables = parseUserInput(pinyinInput.value);
-  const isCorrect = syllablesMatch(userSyllables, state.current.syllableAccents);
-
-  state.answered = true;
-  state.total += 1;
-  if (isCorrect) {
-    state.correct += 1;
-    state.streak += 1;
-    if (state.streak > state.best) {
-      state.best = state.streak;
-      saveBest(state.best);
-    }
-    clearMistake(state.current.value);
-  } else {
-    state.streak = 0;
-    addMistake(state.current.value);
-  }
-
-  revealLookupPanel();
-
-  showFeedback(isCorrect);
-  updateStats();
-  nextBtn.classList.remove("hidden");
+  gradeAnswer(syllablesMatch(userSyllables, state.current.syllableAccents));
   pinyinInput.select();
   state.gradedValue = pinyinInput.value;
 }
@@ -637,13 +824,18 @@ function skipOrReveal() {
   state.streak = 0;
   addMistake(state.current.value);
   feedback.className = "feedback wrong";
-  feedback.innerHTML = `Skipped — it's <span class="answer-pinyin">${state.current.pinyinDisplay}</span>`;
+  feedback.innerHTML = `Skipped — it's ${answerHtml(state.current)}`;
   appendUseCases();
   updateStats();
   nextBtn.classList.remove("hidden");
-  pinyinInput.value = "";
-  pinyinInput.focus();
-  state.gradedValue = "";
+  if (isSentence(state.current)) {
+    // Tiles stay put so the sentence can still be assembled for practice.
+    state.gradedValue = arrangement();
+  } else {
+    pinyinInput.value = "";
+    pinyinInput.focus();
+    state.gradedValue = "";
+  }
 }
 
 function setRange(range) {
@@ -715,6 +907,26 @@ function renderLookupResult(raw) {
 function revealLookupPanel() {
   lookupPanel.classList.remove("hidden");
 }
+
+sentenceBuilder.addEventListener("click", (e) => {
+  const chunk = e.target.closest(".chunk");
+  if (chunk) moveChunk(chunk);
+});
+
+// Desktop keyboard for Word Order: Enter checks, Backspace takes back the last
+// placed chunk. Only when nothing else wants the key — not while typing in the
+// lookup box, and not when a button like Skip has focus.
+document.addEventListener("keydown", (e) => {
+  if (!isSentence(state.current)) return;
+  if (e.target !== document.body && !e.target.closest(".chunk")) return;
+  if (e.key === "Enter") {
+    e.preventDefault();
+    answerForm.requestSubmit();
+  } else if (e.key === "Backspace" && sentenceAnswer.lastElementChild) {
+    e.preventDefault();
+    moveChunk(sentenceAnswer.lastElementChild);
+  }
+});
 
 pinyinInput.addEventListener("input", liveTransformInput);
 lookupInput.addEventListener("input", liveTransformInput);
