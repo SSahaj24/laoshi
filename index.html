@@ -49,6 +49,12 @@
       <main class="card">
         <div class="hanzi" id="hanziDisplay" lang="zh-Hant">…</div>
 
+        <div class="level-select hidden" id="levelSelect" role="group" aria-label="Difficulty">
+          <button type="button" class="level-btn" data-level="easy">Easy</button>
+          <button type="button" class="level-btn" data-level="medium">Medium</button>
+          <button type="button" class="level-btn" data-level="hard">Hard</button>
+        </div>
+
         <div class="sentence-builder" id="sentenceBuilder">
           <div class="sentence-answer" id="sentenceAnswer" aria-label="Your sentence" aria-live="polite"></div>
           <div class="sentence-bank" id="sentenceBank" aria-label="Words to place"></div>
@@ -104,7 +110,8 @@
       <p>Typed tone marks work too &mdash; <code>sān shí wǔ</code>.</p>
       <p class="modes">
         <strong>Word Order</strong> tap the words into a correct sentence, like the
-        weekly test, with new sentences every round. Tap a placed word to send it back.
+        weekly test, with new sentences every round. Hard gives long, two-part
+        sentences. Tap a placed word to send it back.
         <strong>Tone Pairs</strong> same syllable, different tones
         (七氣起期 → <code>qi1 qi4 qi3 qi2</code>).
         <strong>Random Mix</strong> two random characters, real word or not.

@@ -348,6 +348,29 @@ const SENTENCE_DEFS = [
     end: "？",
     gloss: "I drink black tea — and you?",
   },
+  // Long two-clause sentences from the 作業六 slide, for Hard.
+  {
+    chunks: ["李小姐", "不", "喜歡", "喝", "牛奶，", "她", "喜歡", "喝", "綠茶"],
+    alts: [
+      {
+        chunks: ["李小姐", "喜歡", "喝", "牛奶，", "她", "不", "喜歡", "喝", "綠茶"],
+        gloss: "Miss Li likes drinking milk; she doesn't like green tea.",
+      },
+    ],
+    end: "。",
+    gloss: "Miss Li doesn't like drinking milk; she likes green tea.",
+  },
+  {
+    chunks: ["你的", "印度", "老師", "今天", "來，", "你", "要", "去", "接", "他", "嗎"],
+    alts: [["今天", "你的", "印度", "老師", "來，", "你", "要", "去", "接", "他", "嗎"]],
+    end: "？",
+    gloss: "Your Indian teacher is coming today — are you going to pick him up?",
+  },
+  {
+    chunks: ["王開文", "要", "來", "印度，", "你們", "有", "他的", "電話號碼", "嗎"],
+    end: "？",
+    gloss: "Wang Kaiwen is coming to India — do you have his phone number?",
+  },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -383,21 +406,6 @@ function sentenceReveal(chunks, end, gloss) {
   return { hanzi: chunks.join("") + end, pinyinDisplay: sentencePinyin(chunks, end), gloss };
 }
 
-const SENTENCES = SENTENCE_DEFS.map((def, i) => {
-  // An alt is either a bare chunk list (same meaning) or { chunks, gloss }.
-  const orders = [def, ...(def.alts || []).map((a) => (Array.isArray(a) ? { chunks: a } : a))];
-  const variants = Object.fromEntries(
-    orders.map((o) => [o.chunks.join(""), sentenceReveal(o.chunks, def.end, o.gloss || def.gloss)]),
-  );
-  return {
-    value: `sent-${i}`,
-    kind: "sentence",
-    chunks: def.chunks,
-    accepted: Object.keys(variants),
-    variants,
-    ...variants[def.chunks.join("")],
-  };
-});
 
 // ---------------------------------------------------------------------------
 // Generated Word Order sentences: a small grammar. Vocabulary is tagged by
@@ -405,6 +413,7 @@ const SENTENCES = SENTENCE_DEFS.map((def, i) => {
 // and every pattern can be put in the four forms the assignments drill:
 // statement, 嗎?, V-not-V and negative. Any word using a character outside
 // the syllabus is dropped at load, so later slides only need new words here.
+// Easy / Medium / Hard are set by sentence length (tile count).
 // ---------------------------------------------------------------------------
 
 const LEX = {
@@ -416,9 +425,9 @@ const LEX = {
     { zh: "您", en: "you", obj: "you", be: "are", poss: "your", pro: true, grp: 2 },
     { zh: "他", en: "he", obj: "him", be: "is", poss: "his", pro: true, s3: true },
     { zh: "她", en: "she", obj: "her", be: "is", poss: "her", pro: true, s3: true },
-    { zh: "我們", en: "we", obj: "us", be: "are", pro: true, plural: true, grp: 1 },
-    { zh: "你們", en: "you all", obj: "you all", be: "are", pro: true, plural: true, grp: 2 },
-    { zh: "他們", en: "they", obj: "them", be: "are", pro: true, plural: true },
+    { zh: "我們", en: "we", obj: "us", be: "are", poss: "our", pro: true, plural: true, grp: 1 },
+    { zh: "你們", en: "you all", obj: "you all", be: "are", poss: "your", pro: true, plural: true, grp: 2 },
+    { zh: "他們", en: "they", obj: "them", be: "are", poss: "their", pro: true, plural: true },
     { zh: "陳先生", en: "Mr. Chen", be: "is", s3: true },
     { zh: "李小姐", en: "Miss Li", be: "is", s3: true },
     { zh: "王先生", en: "Mr. Wang", be: "is", s3: true },
@@ -429,21 +438,21 @@ const LEX = {
     { zh: "那個小姐", en: "that woman", be: "is", s3: true },
   ],
   drink: [
-    { zh: "綠茶", en: "green tea" },
-    { zh: "紅茶", en: "black tea" },
-    { zh: "奶茶", en: "milk tea" },
-    { zh: "烏龍茶", en: "oolong tea" },
-    { zh: "咖啡", en: "coffee" },
+    { zh: "綠茶", en: "green tea", brewed: true },
+    { zh: "紅茶", en: "black tea", brewed: true },
+    { zh: "奶茶", en: "milk tea", brewed: true },
+    { zh: "烏龍茶", en: "oolong tea", brewed: true },
+    { zh: "咖啡", en: "coffee", brewed: true },
     { zh: "牛奶", en: "milk" },
     { zh: "水", en: "water" },
   ],
   place: [
-    { zh: "台灣", en: "Taiwan" },
-    { zh: "日本", en: "Japan" },
-    { zh: "英國", en: "the UK" },
-    { zh: "美國", en: "the US" },
-    { zh: "印度", en: "India" },
-    { zh: "中國", en: "China" },
+    { zh: "台灣", en: "Taiwan", adj: "Taiwanese" },
+    { zh: "日本", en: "Japan", adj: "Japanese" },
+    { zh: "英國", en: "the UK", adj: "British" },
+    { zh: "美國", en: "the US", adj: "American" },
+    { zh: "印度", en: "India", adj: "Indian" },
+    { zh: "中國", en: "China", adj: "Chinese" },
   ],
   nationality: [
     { zh: "台灣人", en: "Taiwanese" },
@@ -481,8 +490,27 @@ const LEX = {
   ],
 };
 
+// A word is one tile unless it's a multi-tile phrase (`tiles`).
+const T = (w) => w.tiles || [w.zh];
+const wordKey = (w) => T(w).join("|");
+
+// Longer noun phrases, used more at higher levels: 我的老師 / 美國老師 /
+// 印度奶茶. Each stays two tiles, so they also make the puzzle longer.
+for (const p of LEX.person.filter((w) => w.pro)) {
+  for (const role of [{ zh: "老師", en: "teacher" }, { zh: "班代", en: "class rep" }]) {
+    LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
+  }
+}
+for (const pl of LEX.place) {
+  // natMod: "the American teacher" can't then be 日本人 in the same sentence.
+  LEX.person.push({ tiles: [pl.zh, "老師"], en: `the ${pl.adj} teacher`, be: "is", s3: true, mod: true, natMod: true });
+  for (const d of LEX.drink.filter((w) => w.brewed)) {
+    LEX.drink.push({ tiles: [pl.zh, d.zh], en: `${pl.adj} ${d.en}`, mod: true });
+  }
+}
+
 for (const cat of Object.keys(LEX)) {
-  LEX[cat] = LEX[cat].filter((w) => [...w.zh].every((ch) => CHAR_PINYIN.has(ch)));
+  LEX[cat] = LEX[cat].filter((w) => T(w).every((tile) => [...tile].every((ch) => CHAR_PINYIN.has(ch))));
 }
 // 姓 only makes sense with a singular pronoun — 陳先生姓王 contradicts itself.
 LEX.pronoun = LEX.person.filter((p) => p.pro && !p.plural);
@@ -491,19 +519,32 @@ const does = (p) => (p.s3 ? "does" : "do");
 const doesnt = (p) => (p.s3 ? "doesn't" : "don't");
 const third = (p, base, s) => (p.s3 ? s : base);
 const pickUp = (o) => (o.pro ? `pick ${o.obj} up` : `pick up ${o.en}`);
+const whatAbout = (o) => `what about ${o.pro ? o.obj : o.en}?`;
 const capFirst = (s) => s[0].toUpperCase() + s.slice(1);
+// The comma that ends a first clause rides on that clause's last tile.
+const withComma = (tiles) => [...tiles.slice(0, -1), `${tiles.at(-1)}，`];
+const noSharedTiles = (...ws) => {
+  const all = ws.flatMap(T);
+  return new Set(all).size === all.length;
+};
+const differentPeople = (a, b) => a !== b && !(a.grp && a.grp === b.grp);
 
-// Each build() returns the subject chunk, the predicate chunks for the
+const QUESTION_FORMS = new Set(["ma", "vnv", "ne"]);
+const formEnd = (form) => (QUESTION_FORMS.has(form) ? "？" : "。");
+
+// Each build() returns the subject tiles, the predicate tiles for the
 // requested form, and an English gloss. `t` is the English time (" tomorrow")
 // or "". Chunks follow the test slide: V-not-V splits as V / 不V, negatives
-// as 不 / V, and 嗎 and 很 are their own tiles.
+// as 不 / V, and 嗎 and 很 are their own tiles. `long` patterns are the
+// two-clause and purpose sentences that Hard mode leans on.
 const PATTERNS = [
   {
     id: "nat",
     slots: ["person", "nationality"],
     forms: ["stmt", "ma", "vnv", "neg"],
+    ok: ([s]) => !s.natMod,
     build: ([s, n], form) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: { stmt: ["是", n.zh], ma: ["是", n.zh, "嗎"], vnv: ["是", "不是", n.zh], neg: ["不", "是", n.zh] }[form],
       en:
         form === "stmt" ? `${s.en} ${s.be} ${n.en}.`
@@ -516,8 +557,8 @@ const PATTERNS = [
     slots: ["person", "drink"],
     forms: ["stmt", "ma", "vnv", "neg"],
     build: ([s, d], form) => ({
-      subject: s.zh,
-      pred: { stmt: ["喝", d.zh], ma: ["喝", d.zh, "嗎"], vnv: ["喝", "不喝", d.zh], neg: ["不", "喝", d.zh] }[form],
+      subject: T(s),
+      pred: { stmt: ["喝", ...T(d)], ma: ["喝", ...T(d), "嗎"], vnv: ["喝", "不喝", ...T(d)], neg: ["不", "喝", ...T(d)] }[form],
       en:
         form === "stmt" ? `${s.en} ${third(s, "drink", "drinks")} ${d.en}.`
         : form === "neg" ? `${s.en} ${doesnt(s)} drink ${d.en}.`
@@ -529,12 +570,12 @@ const PATTERNS = [
     slots: ["person", "drink"],
     forms: ["stmt", "ma", "vnv", "neg"],
     build: ([s, d], form) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: {
-        stmt: ["很", "喜歡", "喝", d.zh],
-        ma: ["喜歡", "喝", d.zh, "嗎"],
-        vnv: ["喜", "不喜歡", "喝", d.zh],
-        neg: ["不", "喜歡", "喝", d.zh],
+        stmt: ["很", "喜歡", "喝", ...T(d)],
+        ma: ["喜歡", "喝", ...T(d), "嗎"],
+        vnv: ["喜", "不喜歡", "喝", ...T(d)],
+        neg: ["不", "喜歡", "喝", ...T(d)],
       }[form],
       en:
         form === "stmt" ? `${s.en} really ${third(s, "like", "likes")} drinking ${d.en}.`
@@ -548,7 +589,7 @@ const PATTERNS = [
     time: true,
     forms: ["stmt", "ma", "vnv", "neg"],
     build: ([s, p], form, t) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: {
         stmt: ["要", "去", p.zh],
         ma: ["要", "去", p.zh, "嗎"],
@@ -567,11 +608,11 @@ const PATTERNS = [
     time: true,
     forms: ["stmt", "ma", "vnv", "neg"],
     build: ([s, v, p], form, t) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: {
         stmt: [v.zh, p.zh],
         ma: [v.zh, p.zh, "嗎"],
-        vnv: [v.zh, "不" + v.zh, p.zh],
+        vnv: [v.zh, `不${v.zh}`, p.zh],
         neg: ["不", v.zh, p.zh],
       }[form],
       en:
@@ -586,7 +627,7 @@ const PATTERNS = [
     forms: ["stmt", "ma", "vnv", "neg"],
     // 有 is the one verb negated with 沒, so its V-not-V is 有沒有.
     build: ([s, x], form) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: { stmt: ["有", x.zh], ma: ["有", x.zh, "嗎"], vnv: ["有", "沒有", x.zh], neg: ["沒", "有", x.zh] }[form],
       en:
         form === "stmt" ? `${s.en} ${third(s, "have", "has")} ${x.en}.`
@@ -599,7 +640,7 @@ const PATTERNS = [
     slots: ["drink"],
     forms: ["stmt", "ma", "vnv", "neg"],
     build: ([d], form) => ({
-      subject: d.zh,
+      subject: T(d),
       pred: { stmt: ["很", "好喝"], ma: ["好喝", "嗎"], vnv: ["好", "不好喝"], neg: ["不", "好喝"] }[form],
       en:
         form === "stmt" ? `${d.en} is really good.`
@@ -612,14 +653,14 @@ const PATTERNS = [
     slots: ["person", "person"],
     time: true,
     forms: ["stmt", "ma", "vnv", "neg"],
-    ok: ([s, o]) => s !== o && !(s.grp && s.grp === o.grp),
+    ok: ([s, o]) => differentPeople(s, o) && noSharedTiles(s, o),
     build: ([s, o], form, t) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: {
-        stmt: ["去", "接", o.zh],
-        ma: ["去", "接", o.zh, "嗎"],
-        vnv: ["去", "不去", "接", o.zh],
-        neg: ["不", "去", "接", o.zh],
+        stmt: ["去", "接", ...T(o)],
+        ma: ["去", "接", ...T(o), "嗎"],
+        vnv: ["去", "不去", "接", ...T(o)],
+        neg: ["不", "去", "接", ...T(o)],
       }[form],
       en:
         form === "stmt" ? `${s.en} ${s.be} going to ${pickUp(o)}${t}.`
@@ -632,7 +673,7 @@ const PATTERNS = [
     slots: ["pronoun", "surname"],
     forms: ["stmt", "ma", "neg"], // 你姓不姓陳 is stilted; the textbook asks 你姓陳嗎
     build: ([s, x], form) => ({
-      subject: s.zh,
+      subject: T(s),
       pred: { stmt: ["姓", x.zh], ma: ["姓", x.zh, "嗎"], neg: ["不", "姓", x.zh] }[form],
       en:
         form === "stmt" ? `${s.poss} surname is ${x.en}.`
@@ -640,34 +681,160 @@ const PATTERNS = [
         : `is ${s.poss} surname ${x.en}?`,
     }),
   },
+  {
+    id: "welcome",
+    slots: ["person", "place"],
+    forms: ["stmt"],
+    ok: ([o]) => o.grp !== 1, // nobody welcomes themselves: no 歡迎我們
+    build: ([o, p]) => ({
+      subject: ["歡迎"],
+      pred: [...T(o), "來", p.zh],
+      en: `${o.en} ${o.be} welcome to come to ${p.en}.`,
+    }),
+  },
+  {
+    // 我要去印度喝印度茶 — go somewhere to drink something.
+    id: "purpose",
+    slots: ["person", "place", "drink"],
+    time: true,
+    long: true,
+    forms: ["stmt", "ma", "vnv", "neg"],
+    // You go somewhere for its tea or coffee: 去印度喝印度奶茶, not 去日本喝水
+    // or 去美國喝中國茶. The shared place tile is intended, so it's exempt from
+    // the distinct-tiles rule below.
+    ok: ([, p, d]) => (d.mod ? d.tiles[0] === p.zh : Boolean(d.brewed)),
+    allowShared: true,
+    build: ([s, p, d], form, t) => ({
+      subject: T(s),
+      pred: {
+        stmt: ["要", "去", p.zh, "喝", ...T(d)],
+        ma: ["要", "去", p.zh, "喝", ...T(d), "嗎"],
+        vnv: ["要", "不要", "去", p.zh, "喝", ...T(d)],
+        neg: ["不", "要", "去", p.zh, "喝", ...T(d)],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} ${third(s, "want", "wants")} to go to ${p.en} to drink ${d.en}${t}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} want to go to ${p.en} to drink ${d.en}${t}.`
+        : `${does(s)} ${s.en} want to go to ${p.en} to drink ${d.en}${t}?`,
+    }),
+  },
+  {
+    // 李小姐不喜歡喝牛奶，喜歡喝綠茶 — the 作業六 two-clause contrast.
+    id: "contrast",
+    slots: ["person", "drink", "drink"],
+    long: true,
+    forms: ["posneg", "negpos"],
+    ok: ([, a, b]) => a !== b && noSharedTiles(a, b),
+    build: ([s, a, b], form) => ({
+      subject: T(s),
+      pred:
+        form === "posneg"
+          ? ["喜歡", "喝", ...withComma(T(a)), "不", "喜歡", "喝", ...T(b)]
+          : ["不", "喜歡", "喝", ...withComma(T(a)), "喜歡", "喝", ...T(b)],
+      en:
+        form === "posneg"
+          ? `${s.en} ${third(s, "like", "likes")} drinking ${a.en}, but not ${b.en}.`
+          : `${s.en} ${doesnt(s)} like drinking ${a.en}, but ${third(s, "like", "likes")} ${b.en}.`,
+    }),
+  },
+  {
+    // 我很喜歡喝奶茶，你呢？
+    id: "neLike",
+    slots: ["person", "drink", "person"],
+    long: true,
+    forms: ["ne"],
+    ok: ([s, , s2]) => differentPeople(s, s2) && noSharedTiles(s, s2),
+    build: ([s, d, s2]) => ({
+      subject: T(s),
+      pred: ["很", "喜歡", "喝", ...withComma(T(d)), ...T(s2), "呢"],
+      en: `${s.en} really ${third(s, "like", "likes")} drinking ${d.en} — ${whatAbout(s2)}`,
+    }),
+  },
+  {
+    // 老師明天要去日本，你呢？
+    id: "neWant",
+    slots: ["person", "place", "person"],
+    time: true,
+    long: true,
+    forms: ["ne"],
+    ok: ([s, , s2]) => differentPeople(s, s2) && noSharedTiles(s, s2),
+    build: ([s, p, s2], form, t) => ({
+      subject: T(s),
+      pred: ["要", "去", `${p.zh}，`, ...T(s2), "呢"],
+      en: `${s.en} ${third(s, "want", "wants")} to go to ${p.en}${t} — ${whatAbout(s2)}`,
+    }),
+  },
 ];
 const PATTERN_BY_ID = new Map(PATTERNS.map((p) => [p.id, p]));
 
+function realize(pat, fillers, form, time, tp) {
+  const { subject, pred, en } = pat.build(fillers, form, time ? ` ${time.en}` : "");
+  const chunks = !time ? [...subject, ...pred] : tp === "front" ? [time.zh, ...subject, ...pred] : [...subject, time.zh, ...pred];
+  return { chunks, en };
+}
+
 const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const cartesian = (lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((x) => [...a, x])), [[]]);
+const tileBag = (tiles) => [...tiles].sort().join("\u0001");
 
-function permutations(arr) {
-  if (arr.length <= 1) return [arr];
-  return arr.flatMap((x, i) => permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map((rest) => [x, ...rest]));
+// Every sentence the grammar can make from exactly these tiles, each with its
+// own reveal. This is how answers are marked: any of these is correct. It
+// covers moved time words, swapped people, and a 不 moved to the other
+// clause — and the reveal shows the meaning of the order actually used.
+function grammarVariants(tiles, end) {
+  const bag = tileBag(tiles);
+  const avail = new Set(tiles.map((t) => t.replace(/，$/, "")));
+  const fits = (w) => T(w).every((t) => avail.has(t));
+  const times = [null, ...LEX.time.filter(fits)];
+  const out = {};
+  for (const pat of PATTERNS) {
+    const pools = pat.slots.map((cat) => LEX[cat].filter(fits));
+    if (pools.some((pool) => pool.length === 0)) continue;
+    for (const fillers of cartesian(pools)) {
+      if (new Set(fillers).size !== fillers.length || (pat.ok && !pat.ok(fillers))) continue;
+      for (const form of pat.forms) {
+        if (formEnd(form) !== end) continue;
+        for (const time of pat.time ? times : [null]) {
+          for (const tp of time ? ["front", "mid"] : ["mid"]) {
+            const v = realize(pat, fillers, form, time, tp);
+            if (tileBag(v.chunks) !== bag) continue;
+            out[v.chunks.join("")] ??= sentenceReveal(v.chunks, end, capFirst(v.en));
+          }
+        }
+      }
+    }
+  }
+  return out;
 }
 
-// Every way to seat the same words in the pattern's slots. Only matters where
-// two slots share a type — 我們去接老師 and 老師去接我們 are both correct.
-function slotAssignments(pat, fillers) {
-  return permutations(fillers).filter(
-    (fs) => fs.every((w, i) => LEX[pat.slots[i]].includes(w)) && (!pat.ok || pat.ok(fs)),
-  );
-}
+// Difficulty is tile count: Easy 3–4, Medium 5–6, Hard 7+.
+const LEVELS = {
+  easy: { mod: 0, time: 0 },
+  medium: { mod: 0.35, time: 0.4 },
+  hard: { mod: 0.6, time: 0.6 },
+};
+const levelOf = (tileCount) => (tileCount <= 4 ? "easy" : tileCount <= 6 ? "medium" : "hard");
 
-function randomSentenceSpec() {
-  const pat = pickOne(PATTERNS);
+function randomSentenceSpec(level) {
+  const cfg = LEVELS[level];
+  const pat =
+    level === "hard" && Math.random() < 0.6 ? pickOne(PATTERNS.filter((p) => p.long))
+    : level === "easy" ? pickOne(PATTERNS.filter((p) => !p.long))
+    : pickOne(PATTERNS);
   for (let tries = 0; tries < 20; tries++) {
-    const fillers = pat.slots.map((cat) => pickOne(LEX[cat]));
+    const fillers = pat.slots.map((cat) => {
+      const mods = LEX[cat].filter((w) => w.mod);
+      return mods.length && Math.random() < cfg.mod ? pickOne(mods) : pickOne(LEX[cat].filter((w) => !w.mod));
+    });
+    const time = pat.time && Math.random() < cfg.time ? pickOne(LEX.time) : null;
     if (new Set(fillers).size !== fillers.length || (pat.ok && !pat.ok(fillers))) continue;
-    const time = pat.time && Math.random() < 0.5 ? pickOne(LEX.time) : null;
+    // Words sharing a tile (我的老師 + 美國老師) could recombine into sentences
+    // the grammar can't recognise, so keep every word's tiles distinct.
+    if (!pat.allowShared && !noSharedTiles(...fillers, ...(time ? [time] : []))) continue;
     return {
       p: pat.id,
       f: pickOne(pat.forms),
-      s: fillers.map((w) => w.zh),
+      s: fillers.map(wordKey),
       t: time ? time.zh : null,
       tp: Math.random() < 0.5 ? "front" : "mid",
     };
@@ -680,44 +847,59 @@ function randomSentenceSpec() {
 function buildGenerated(spec) {
   const pat = spec && PATTERN_BY_ID.get(spec.p);
   if (!pat || !pat.forms.includes(spec.f)) return null;
-  const fillers = pat.slots.map((cat, i) => LEX[cat].find((w) => w.zh === spec.s[i]));
+  const fillers = pat.slots.map((cat, i) => LEX[cat].find((w) => wordKey(w) === spec.s[i]));
   const time = spec.t ? LEX.time.find((w) => w.zh === spec.t) : null;
   if (fillers.some((w) => !w) || (spec.t && !time)) return null;
-
-  const render = (fs, tp) => {
-    const { subject, pred, en } = pat.build(fs, spec.f, time ? ` ${time.en}` : "");
-    const chunks = !time ? [subject, ...pred] : tp === "front" ? [time.zh, subject, ...pred] : [subject, time.zh, ...pred];
-    return { chunks, en };
-  };
-  const end = spec.f === "ma" || spec.f === "vnv" ? "？" : "。";
-  const main = render(fillers, spec.tp);
-  const variants = {};
-  for (const fs of slotAssignments(pat, fillers)) {
-    for (const tp of time ? ["front", "mid"] : [spec.tp]) {
-      const v = render(fs, tp);
-      variants[v.chunks.join("")] = sentenceReveal(v.chunks, end, capFirst(v.en));
-    }
-  }
+  const end = formEnd(spec.f);
+  const main = realize(pat, fillers, spec.f, time, spec.tp);
+  const mainText = main.chunks.join("");
+  const variants = grammarVariants(main.chunks, end);
+  variants[mainText] = sentenceReveal(main.chunks, end, capFirst(main.en));
   return {
     value: "gen:" + JSON.stringify(spec),
     kind: "sentence",
     chunks: main.chunks,
+    level: levelOf(main.chunks.length),
     accepted: Object.keys(variants),
     variants,
-    ...variants[main.chunks.join("")],
+    ...variants[mainText],
   };
 }
 
-// A fresh batch every lap, mixed with the hand-written ones (which include
-// the five real test-slide questions).
-function sentencePool(count = 25) {
-  const curated = new Set(SENTENCES.map((s) => s.hanzi));
-  const fresh = new Map();
-  for (let i = 0; i < count * 4 && fresh.size < count; i++) {
-    const e = buildGenerated(randomSentenceSpec());
-    if (e && !curated.has(e.hanzi)) fresh.set(e.value, e);
+const SENTENCES = SENTENCE_DEFS.map((def, i) => {
+  // Hand-written alternates first (an alt is a chunk list, or { chunks, gloss }
+  // when the new order changes the meaning); then anything else the grammar
+  // can build from the same tiles.
+  const orders = [def, ...(def.alts || []).map((a) => (Array.isArray(a) ? { chunks: a } : a))];
+  const variants = {
+    ...grammarVariants(def.chunks, def.end),
+    ...Object.fromEntries(orders.map((o) => [o.chunks.join(""), sentenceReveal(o.chunks, def.end, o.gloss || def.gloss)])),
+  };
+  return {
+    value: `sent-${i}`,
+    kind: "sentence",
+    chunks: def.chunks,
+    level: levelOf(def.chunks.length),
+    accepted: Object.keys(variants),
+    variants,
+    ...variants[def.chunks.join("")],
+  };
+});
+
+// A fresh batch every lap: the hand-written sentences at this level (which
+// include the real test-slide questions) plus newly generated ones.
+function sentencePool(level, count = 25) {
+  const curated = SENTENCES.filter((s) => s.level === level);
+  const seen = new Set(curated.map((s) => s.hanzi));
+  const fresh = [];
+  for (let i = 0; i < count * 12 && fresh.length < count; i++) {
+    const e = buildGenerated(randomSentenceSpec(level));
+    if (e && e.level === level && !seen.has(e.hanzi)) {
+      seen.add(e.hanzi);
+      fresh.push(e);
+    }
   }
-  return [...SENTENCES, ...fresh.values()];
+  return [...curated, ...fresh];
 }
 
 function entryFromValue(v) {
@@ -756,6 +938,16 @@ function mistakesPool() {
 
 const STORAGE_KEY = "laoshi_numbers_best_streak";
 const MISTAKES_KEY = "laoshi_mistakes";
+const LEVEL_KEY = "laoshi_sentence_level";
+
+function loadLevel() {
+  try {
+    const v = localStorage.getItem(LEVEL_KEY);
+    return v in LEVELS ? v : "medium";
+  } catch {
+    return "medium";
+  }
+}
 
 function loadMistakes() {
   try {
@@ -786,6 +978,7 @@ const state = {
   streak: 0,
   best: loadBest(),
   mistakes: loadMistakes(), // Set of `value`s answered wrong/skipped, persisted
+  level: loadLevel(), // Word Order difficulty
 };
 
 // Fisher-Yates shuffle (does not mutate the input).
@@ -820,6 +1013,7 @@ function saveBest(val) {
 
 const card = document.querySelector(".card");
 const hanziDisplay = document.getElementById("hanziDisplay");
+const levelSelect = document.getElementById("levelSelect");
 const sentenceBuilder = document.getElementById("sentenceBuilder");
 const sentenceAnswer = document.getElementById("sentenceAnswer");
 const sentenceBank = document.getElementById("sentenceBank");
@@ -883,7 +1077,7 @@ function liveTransformInput(e) {
 // shouldn't do.
 function drawNext() {
   if (state.deck.length === 0) {
-    if (state.range === "sentences") state.pool = sentencePool();
+    if (state.range === "sentences") state.pool = sentencePool(state.level);
     state.deck = shuffled(state.pool);
     // Don't let a fresh lap start with the item that just ended the last one.
     if (state.current && state.deck.length > 1 && state.deck[0].value === state.current.value) {
@@ -1197,7 +1391,25 @@ function setRange(range) {
   [...rangeSelect.children].forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.range === range);
   });
+  // Only on the Word Order tab — sentences in My Mistakes keep whatever level they were.
+  levelSelect.classList.toggle("hidden", range !== "sentences");
   pickNext();
+}
+
+function setLevel(level) {
+  state.level = level;
+  try {
+    localStorage.setItem(LEVEL_KEY, level);
+  } catch {
+    /* ignore (e.g. storage disabled) */
+  }
+  [...levelSelect.children].forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.level === level);
+  });
+  if (state.range === "sentences") {
+    state.deck = []; // deal a new batch at the new length
+    pickNext();
+  }
 }
 
 function resetMistakes() {
@@ -1290,6 +1502,10 @@ rangeSelect.addEventListener("click", (e) => {
   if (btn) setRange(btn.dataset.range);
 });
 resetMistakesBtn.addEventListener("click", resetMistakes);
+levelSelect.addEventListener("click", (e) => {
+  const btn = e.target.closest(".level-btn");
+  if (btn) setLevel(btn.dataset.level);
+});
 lookupForm.addEventListener("submit", (e) => {
   e.preventDefault();
   renderLookupResult(lookupInput.value);
@@ -1297,4 +1513,5 @@ lookupForm.addEventListener("submit", (e) => {
 
 updateStats();
 updateMistakeCount();
+setLevel(state.level);
 pickNext();

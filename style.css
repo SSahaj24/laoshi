@@ -371,6 +371,33 @@ body {
   flex: 1;
 }
 
+.level-select {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.level-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink-dim);
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.level-btn:hover {
+  border-color: var(--accent);
+}
+
+.level-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* The line the sentence is written on. */
 .sentence-answer {
   min-height: 64px;
