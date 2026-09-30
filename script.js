@@ -336,7 +336,7 @@ const SENTENCE_DEFS = [
   { chunks: ["那個", "小姐", "是", "哪國人"], end: "？", gloss: "What nationality is that woman?" },
   {
     chunks: ["我們", "去", "接", "老師"],
-    alts: [["老師", "去", "接", "我們"]],
+    alts: [{ chunks: ["老師", "去", "接", "我們"], gloss: "The teacher is going to pick us up." }],
     end: "。",
     gloss: "We're going to pick up the teacher.",
   },
@@ -344,7 +344,7 @@ const SENTENCE_DEFS = [
   { chunks: ["這個", "牛奶", "很", "好喝"], end: "。", gloss: "This milk is delicious." },
   {
     chunks: ["我", "喝", "紅茶，", "你", "呢"],
-    alts: [["你", "喝", "紅茶，", "我", "呢"]],
+    alts: [{ chunks: ["你", "喝", "紅茶，", "我", "呢"], gloss: "You drink black tea — and me?" }],
     end: "？",
     gloss: "I drink black tea — and you?",
   },
@@ -367,21 +367,369 @@ function sentencePinyin(chunks, end) {
     const cjk = [...c].filter((ch) => CHAR_PINYIN.has(ch));
     const missing = [...c].filter((ch) => /\p{Script=Han}/u.test(ch) && !CHAR_PINYIN.has(ch));
     if (missing.length) console.error(`Word Order: ${missing.join("")} in "${c}" is not in the syllabus`);
-    const word = cjk.map(() => syl[k++]).join("");
+    // Standard pinyin apostrophe before an a/o/e syllable: xīngqí'èr, not xīngqíèr.
+    const word = cjk
+      .map(() => syl[k++])
+      .map((s, i) => (i > 0 && /^[aeoāáǎàēéěèōóǒò]/.test(s) ? `'${s}` : s))
+      .join("");
     return c.endsWith("，") ? `${word},` : word;
   });
   return words.join(" ") + (end === "？" ? "?" : ".");
 }
 
-const SENTENCES = SENTENCE_DEFS.map((def, i) => ({
-  value: `sent-${i}`,
-  kind: "sentence",
-  chunks: def.chunks,
-  accepted: [def.chunks, ...(def.alts || [])].map((order) => order.join("")),
-  gloss: def.gloss,
-  hanzi: def.chunks.join("") + def.end,
-  pinyinDisplay: sentencePinyin(def.chunks, def.end),
-}));
+// One reveal per accepted order, so a correct alternate shows *your* sentence
+// and its meaning — 老師去接我們 is not the same claim as 我們去接老師.
+function sentenceReveal(chunks, end, gloss) {
+  return { hanzi: chunks.join("") + end, pinyinDisplay: sentencePinyin(chunks, end), gloss };
+}
+
+const SENTENCES = SENTENCE_DEFS.map((def, i) => {
+  // An alt is either a bare chunk list (same meaning) or { chunks, gloss }.
+  const orders = [def, ...(def.alts || []).map((a) => (Array.isArray(a) ? { chunks: a } : a))];
+  const variants = Object.fromEntries(
+    orders.map((o) => [o.chunks.join(""), sentenceReveal(o.chunks, def.end, o.gloss || def.gloss)]),
+  );
+  return {
+    value: `sent-${i}`,
+    kind: "sentence",
+    chunks: def.chunks,
+    accepted: Object.keys(variants),
+    variants,
+    ...variants[def.chunks.join("")],
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Generated Word Order sentences: a small grammar. Vocabulary is tagged by
+// type, each pattern has typed slots (喝 only takes drinks, 去 only places),
+// and every pattern can be put in the four forms the assignments drill:
+// statement, 嗎?, V-not-V and negative. Any word using a character outside
+// the syllabus is dropped at load, so later slides only need new words here.
+// ---------------------------------------------------------------------------
+
+const LEX = {
+  // `grp` marks 1st/2nd person so 我 never picks up 我們; `pro` = pronoun.
+  person: [
+    { zh: "我", en: "I", obj: "me", be: "am", poss: "my", pro: true, grp: 1 },
+    { zh: "你", en: "you", obj: "you", be: "are", poss: "your", pro: true, grp: 2 },
+    { zh: "妳", en: "you", obj: "you", be: "are", poss: "your", pro: true, grp: 2 },
+    { zh: "您", en: "you", obj: "you", be: "are", poss: "your", pro: true, grp: 2 },
+    { zh: "他", en: "he", obj: "him", be: "is", poss: "his", pro: true, s3: true },
+    { zh: "她", en: "she", obj: "her", be: "is", poss: "her", pro: true, s3: true },
+    { zh: "我們", en: "we", obj: "us", be: "are", pro: true, plural: true, grp: 1 },
+    { zh: "你們", en: "you all", obj: "you all", be: "are", pro: true, plural: true, grp: 2 },
+    { zh: "他們", en: "they", obj: "them", be: "are", pro: true, plural: true },
+    { zh: "陳先生", en: "Mr. Chen", be: "is", s3: true },
+    { zh: "李小姐", en: "Miss Li", be: "is", s3: true },
+    { zh: "王先生", en: "Mr. Wang", be: "is", s3: true },
+    { zh: "陳小姐", en: "Miss Chen", be: "is", s3: true },
+    { zh: "老師", en: "the teacher", be: "is", s3: true },
+    { zh: "班代", en: "the class rep", be: "is", s3: true },
+    { zh: "那個人", en: "that person", be: "is", s3: true },
+    { zh: "那個小姐", en: "that woman", be: "is", s3: true },
+  ],
+  drink: [
+    { zh: "綠茶", en: "green tea" },
+    { zh: "紅茶", en: "black tea" },
+    { zh: "奶茶", en: "milk tea" },
+    { zh: "烏龍茶", en: "oolong tea" },
+    { zh: "咖啡", en: "coffee" },
+    { zh: "牛奶", en: "milk" },
+    { zh: "水", en: "water" },
+  ],
+  place: [
+    { zh: "台灣", en: "Taiwan" },
+    { zh: "日本", en: "Japan" },
+    { zh: "英國", en: "the UK" },
+    { zh: "美國", en: "the US" },
+    { zh: "印度", en: "India" },
+    { zh: "中國", en: "China" },
+  ],
+  nationality: [
+    { zh: "台灣人", en: "Taiwanese" },
+    { zh: "日本人", en: "Japanese" },
+    { zh: "英國人", en: "British" },
+    { zh: "美國人", en: "American" },
+    { zh: "印度人", en: "Indian" },
+    { zh: "中國人", en: "Chinese" },
+  ],
+  motion: [
+    { zh: "去", en: "go to", en3: "goes to" },
+    { zh: "來", en: "come to", en3: "comes to" },
+    { zh: "回", en: "go back to", en3: "goes back to" },
+  ],
+  time: [
+    { zh: "今天", en: "today" },
+    { zh: "明天", en: "tomorrow" },
+    { zh: "星期一", en: "on Monday" },
+    { zh: "星期二", en: "on Tuesday" },
+    { zh: "星期三", en: "on Wednesday" },
+    { zh: "星期四", en: "on Thursday" },
+    { zh: "星期五", en: "on Friday" },
+    { zh: "星期六", en: "on Saturday" },
+    { zh: "星期天", en: "on Sunday" },
+  ],
+  thing: [
+    { zh: "手機", en: "a mobile phone" },
+    { zh: "房子", en: "a house" },
+    { zh: "問題", en: "a question" },
+  ],
+  surname: [
+    { zh: "陳", en: "Chen" },
+    { zh: "李", en: "Li" },
+    { zh: "王", en: "Wang" },
+  ],
+};
+
+for (const cat of Object.keys(LEX)) {
+  LEX[cat] = LEX[cat].filter((w) => [...w.zh].every((ch) => CHAR_PINYIN.has(ch)));
+}
+// 姓 only makes sense with a singular pronoun — 陳先生姓王 contradicts itself.
+LEX.pronoun = LEX.person.filter((p) => p.pro && !p.plural);
+
+const does = (p) => (p.s3 ? "does" : "do");
+const doesnt = (p) => (p.s3 ? "doesn't" : "don't");
+const third = (p, base, s) => (p.s3 ? s : base);
+const pickUp = (o) => (o.pro ? `pick ${o.obj} up` : `pick up ${o.en}`);
+const capFirst = (s) => s[0].toUpperCase() + s.slice(1);
+
+// Each build() returns the subject chunk, the predicate chunks for the
+// requested form, and an English gloss. `t` is the English time (" tomorrow")
+// or "". Chunks follow the test slide: V-not-V splits as V / 不V, negatives
+// as 不 / V, and 嗎 and 很 are their own tiles.
+const PATTERNS = [
+  {
+    id: "nat",
+    slots: ["person", "nationality"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, n], form) => ({
+      subject: s.zh,
+      pred: { stmt: ["是", n.zh], ma: ["是", n.zh, "嗎"], vnv: ["是", "不是", n.zh], neg: ["不", "是", n.zh] }[form],
+      en:
+        form === "stmt" ? `${s.en} ${s.be} ${n.en}.`
+        : form === "neg" ? `${s.en} ${s.be} not ${n.en}.`
+        : `${s.be} ${s.en} ${n.en}?`,
+    }),
+  },
+  {
+    id: "drink",
+    slots: ["person", "drink"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, d], form) => ({
+      subject: s.zh,
+      pred: { stmt: ["喝", d.zh], ma: ["喝", d.zh, "嗎"], vnv: ["喝", "不喝", d.zh], neg: ["不", "喝", d.zh] }[form],
+      en:
+        form === "stmt" ? `${s.en} ${third(s, "drink", "drinks")} ${d.en}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} drink ${d.en}.`
+        : `${does(s)} ${s.en} drink ${d.en}?`,
+    }),
+  },
+  {
+    id: "like",
+    slots: ["person", "drink"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, d], form) => ({
+      subject: s.zh,
+      pred: {
+        stmt: ["很", "喜歡", "喝", d.zh],
+        ma: ["喜歡", "喝", d.zh, "嗎"],
+        vnv: ["喜", "不喜歡", "喝", d.zh],
+        neg: ["不", "喜歡", "喝", d.zh],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} really ${third(s, "like", "likes")} drinking ${d.en}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} like drinking ${d.en}.`
+        : `${does(s)} ${s.en} like drinking ${d.en}?`,
+    }),
+  },
+  {
+    id: "want",
+    slots: ["person", "place"],
+    time: true,
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, p], form, t) => ({
+      subject: s.zh,
+      pred: {
+        stmt: ["要", "去", p.zh],
+        ma: ["要", "去", p.zh, "嗎"],
+        vnv: ["要", "不要", "去", p.zh],
+        neg: ["不", "要", "去", p.zh],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} ${third(s, "want", "wants")} to go to ${p.en}${t}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} want to go to ${p.en}${t}.`
+        : `${does(s)} ${s.en} want to go to ${p.en}${t}?`,
+    }),
+  },
+  {
+    id: "move",
+    slots: ["person", "motion", "place"],
+    time: true,
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, v, p], form, t) => ({
+      subject: s.zh,
+      pred: {
+        stmt: [v.zh, p.zh],
+        ma: [v.zh, p.zh, "嗎"],
+        vnv: [v.zh, "不" + v.zh, p.zh],
+        neg: ["不", v.zh, p.zh],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} ${s.s3 ? v.en3 : v.en} ${p.en}${t}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} ${v.en} ${p.en}${t}.`
+        : `${does(s)} ${s.en} ${v.en} ${p.en}${t}?`,
+    }),
+  },
+  {
+    id: "have",
+    slots: ["person", "thing"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    // 有 is the one verb negated with 沒, so its V-not-V is 有沒有.
+    build: ([s, x], form) => ({
+      subject: s.zh,
+      pred: { stmt: ["有", x.zh], ma: ["有", x.zh, "嗎"], vnv: ["有", "沒有", x.zh], neg: ["沒", "有", x.zh] }[form],
+      en:
+        form === "stmt" ? `${s.en} ${third(s, "have", "has")} ${x.en}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} have ${x.en}.`
+        : `${does(s)} ${s.en} have ${x.en}?`,
+    }),
+  },
+  {
+    id: "tasty",
+    slots: ["drink"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([d], form) => ({
+      subject: d.zh,
+      pred: { stmt: ["很", "好喝"], ma: ["好喝", "嗎"], vnv: ["好", "不好喝"], neg: ["不", "好喝"] }[form],
+      en:
+        form === "stmt" ? `${d.en} is really good.`
+        : form === "neg" ? `${d.en} isn't good.`
+        : `is ${d.en} good?`,
+    }),
+  },
+  {
+    id: "pickup",
+    slots: ["person", "person"],
+    time: true,
+    forms: ["stmt", "ma", "vnv", "neg"],
+    ok: ([s, o]) => s !== o && !(s.grp && s.grp === o.grp),
+    build: ([s, o], form, t) => ({
+      subject: s.zh,
+      pred: {
+        stmt: ["去", "接", o.zh],
+        ma: ["去", "接", o.zh, "嗎"],
+        vnv: ["去", "不去", "接", o.zh],
+        neg: ["不", "去", "接", o.zh],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} ${s.be} going to ${pickUp(o)}${t}.`
+        : form === "neg" ? `${s.en} ${s.be} not going to ${pickUp(o)}${t}.`
+        : `${s.be} ${s.en} going to ${pickUp(o)}${t}?`,
+    }),
+  },
+  {
+    id: "surname",
+    slots: ["pronoun", "surname"],
+    forms: ["stmt", "ma", "neg"], // 你姓不姓陳 is stilted; the textbook asks 你姓陳嗎
+    build: ([s, x], form) => ({
+      subject: s.zh,
+      pred: { stmt: ["姓", x.zh], ma: ["姓", x.zh, "嗎"], neg: ["不", "姓", x.zh] }[form],
+      en:
+        form === "stmt" ? `${s.poss} surname is ${x.en}.`
+        : form === "neg" ? `${s.poss} surname isn't ${x.en}.`
+        : `is ${s.poss} surname ${x.en}?`,
+    }),
+  },
+];
+const PATTERN_BY_ID = new Map(PATTERNS.map((p) => [p.id, p]));
+
+const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+function permutations(arr) {
+  if (arr.length <= 1) return [arr];
+  return arr.flatMap((x, i) => permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map((rest) => [x, ...rest]));
+}
+
+// Every way to seat the same words in the pattern's slots. Only matters where
+// two slots share a type — 我們去接老師 and 老師去接我們 are both correct.
+function slotAssignments(pat, fillers) {
+  return permutations(fillers).filter(
+    (fs) => fs.every((w, i) => LEX[pat.slots[i]].includes(w)) && (!pat.ok || pat.ok(fs)),
+  );
+}
+
+function randomSentenceSpec() {
+  const pat = pickOne(PATTERNS);
+  for (let tries = 0; tries < 20; tries++) {
+    const fillers = pat.slots.map((cat) => pickOne(LEX[cat]));
+    if (new Set(fillers).size !== fillers.length || (pat.ok && !pat.ok(fillers))) continue;
+    const time = pat.time && Math.random() < 0.5 ? pickOne(LEX.time) : null;
+    return {
+      p: pat.id,
+      f: pickOne(pat.forms),
+      s: fillers.map((w) => w.zh),
+      t: time ? time.zh : null,
+      tp: Math.random() < 0.5 ? "front" : "mid",
+    };
+  }
+  return null;
+}
+
+// The spec is the entry's `value`, so a missed generated sentence can be
+// rebuilt exactly when it comes back in My Mistakes.
+function buildGenerated(spec) {
+  const pat = spec && PATTERN_BY_ID.get(spec.p);
+  if (!pat || !pat.forms.includes(spec.f)) return null;
+  const fillers = pat.slots.map((cat, i) => LEX[cat].find((w) => w.zh === spec.s[i]));
+  const time = spec.t ? LEX.time.find((w) => w.zh === spec.t) : null;
+  if (fillers.some((w) => !w) || (spec.t && !time)) return null;
+
+  const render = (fs, tp) => {
+    const { subject, pred, en } = pat.build(fs, spec.f, time ? ` ${time.en}` : "");
+    const chunks = !time ? [subject, ...pred] : tp === "front" ? [time.zh, subject, ...pred] : [subject, time.zh, ...pred];
+    return { chunks, en };
+  };
+  const end = spec.f === "ma" || spec.f === "vnv" ? "？" : "。";
+  const main = render(fillers, spec.tp);
+  const variants = {};
+  for (const fs of slotAssignments(pat, fillers)) {
+    for (const tp of time ? ["front", "mid"] : [spec.tp]) {
+      const v = render(fs, tp);
+      variants[v.chunks.join("")] = sentenceReveal(v.chunks, end, capFirst(v.en));
+    }
+  }
+  return {
+    value: "gen:" + JSON.stringify(spec),
+    kind: "sentence",
+    chunks: main.chunks,
+    accepted: Object.keys(variants),
+    variants,
+    ...variants[main.chunks.join("")],
+  };
+}
+
+// A fresh batch every lap, mixed with the hand-written ones (which include
+// the five real test-slide questions).
+function sentencePool(count = 25) {
+  const curated = new Set(SENTENCES.map((s) => s.hanzi));
+  const fresh = new Map();
+  for (let i = 0; i < count * 4 && fresh.size < count; i++) {
+    const e = buildGenerated(randomSentenceSpec());
+    if (e && !curated.has(e.hanzi)) fresh.set(e.value, e);
+  }
+  return [...SENTENCES, ...fresh.values()];
+}
+
+function entryFromValue(v) {
+  if (typeof v === "string" && v.startsWith("gen:")) {
+    try {
+      return buildGenerated(JSON.parse(v.slice(4)));
+    } catch {
+      return null;
+    }
+  }
+  return ENTRY_BY_VALUE.get(v);
+}
 
 // ---------------------------------------------------------------------------
 // Game state
@@ -403,7 +751,7 @@ const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS
 const ENTRY_BY_VALUE = new Map(ALL_ENTRIES.map((e) => [e.value, e]));
 
 function mistakesPool() {
-  return [...state.mistakes].map((v) => ENTRY_BY_VALUE.get(v)).filter(Boolean);
+  return [...state.mistakes].map(entryFromValue).filter(Boolean);
 }
 
 const STORAGE_KEY = "laoshi_numbers_best_streak";
@@ -535,6 +883,7 @@ function liveTransformInput(e) {
 // shouldn't do.
 function drawNext() {
   if (state.deck.length === 0) {
+    if (state.range === "sentences") state.pool = sentencePool();
     state.deck = shuffled(state.pool);
     // Don't let a fresh lap start with the item that just ended the last one.
     if (state.current && state.deck.length > 1 && state.deck[0].value === state.current.value) {
@@ -723,13 +1072,16 @@ function clearMistake(value) {
   refreshMistakesPoolIfActive();
 }
 
-function answerHtml(entry) {
+// For a sentence, `built` picks the reveal for the order actually used, so an
+// accepted alternate shows the learner's own sentence rather than ours.
+function answerHtml(entry, built) {
   if (isSentence(entry)) {
+    const v = (built && entry.variants?.[built]) || entry;
     return (
       `<div class="sentence-reveal">` +
-      `<div class="sentence-hanzi" lang="zh-Hant">${entry.hanzi}</div>` +
-      `<div class="sentence-pinyin">${entry.pinyinDisplay}</div>` +
-      `<div class="sentence-gloss">${entry.gloss}</div>` +
+      `<div class="sentence-hanzi" lang="zh-Hant">${v.hanzi}</div>` +
+      `<div class="sentence-pinyin">${v.pinyinDisplay}</div>` +
+      `<div class="sentence-gloss">${v.gloss}</div>` +
       `</div>`
     );
   }
@@ -737,7 +1089,7 @@ function answerHtml(entry) {
 }
 
 function showFeedback(isCorrect) {
-  const answer = answerHtml(state.current);
+  const answer = answerHtml(state.current, isCorrect && isSentence(state.current) ? arrangement() : null);
   if (isCorrect) {
     feedback.className = "feedback correct";
     feedback.innerHTML = `Correct! ${answer}`;
