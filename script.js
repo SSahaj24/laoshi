@@ -305,6 +305,56 @@ const CHAR_EXAMPLES = (() => {
 })();
 
 // ---------------------------------------------------------------------------
+// Look-alikes: characters sharing a visible part, shown together so they have
+// to be told apart rather than recognised one at a time. Hand-picked, since
+// shape isn't in the data. Characters not yet in the syllabus are dropped, and
+// a group needs two left. The note is shown with the answer.
+// ---------------------------------------------------------------------------
+
+const LOOKALIKE_DEFS = [
+  { chars: "開關問們", note: "All contain 門 (door)." },
+  { chars: "馬媽嗎碼", note: "All contain 馬 (horse)." },
+  { chars: "還迎這", note: "All have 辶, the “walk” radical." },
+  { chars: "謝課話請", note: "All have 訁, the “speech” radical, on the left." },
+  { chars: "叫喝哪呢", note: "All have 口 (mouth) on the left." },
+  { chars: "好姐姓奶", note: "All have 女 (woman) on the left." },
+  { chars: "你妳您", note: "妳 swaps in 女 for a woman; 您 adds 心 underneath to be polite." },
+  { chars: "他她", note: "亻 (person) vs 女 (woman) on the left." },
+  { chars: "生星姓牛", note: "星 and 姓 contain 生; 牛 just looks like it." },
+  { chars: "茶英華", note: "All have 艹 (grass) on top." },
+  { chars: "客家", note: "Both have 宀 (roof) on top." },
+  { chars: "電零", note: "Both have 雨 (rain) on top." },
+  { chars: "紅綠", note: "Both have 糸 (silk) on the left." },
+  { chars: "回四國", note: "All boxed in by 囗." },
+  { chars: "日明昨", note: "日 (sun), and 日 on the left." },
+  { chars: "早是星", note: "All have 日 (sun) on top." },
+  { chars: "月有期", note: "All contain 月 (moon)." },
+  { chars: "是題", note: "題 contains 是." },
+  { chars: "了子李", note: "子 is 了 with a line across; 李 has 子 underneath." },
+  { chars: "十什", note: "什 is 亻 + 十." },
+  { chars: "二三王", note: "Stacked lines — 王 is 三 with a stroke through it." },
+  { chars: "上下", note: "Mirror images." },
+  { chars: "人八", note: "人's strokes meet at the top; 八's don't." },
+  { chars: "那哪", note: "哪 is 口 + 那." },
+  { chars: "度麼房鹿", note: "All have a roof over the top left." },
+  { chars: "烏馬", note: "Both end in four dots (灬)." },
+  { chars: "本來機", note: "All built on 木 (tree)." },
+];
+
+const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
+  const syllables = [...def.chars].map((ch) => CHAR_INDEX.find((e) => e.ch === ch)).filter(Boolean);
+  if (syllables.length < 2) return null;
+  return { ...makeEntry(syllables, `look-${i}`), kind: "lookalike", syllables, note: def.note };
+}).filter(Boolean);
+
+// Reshuffled each time it's shown, so a group can't be answered from memory of
+// the order. The value stays the same, so mistakes still track the group.
+function presentable(entry) {
+  if (entry.kind !== "lookalike") return entry;
+  return { ...entry, ...makeEntry(shuffled(entry.syllables), entry.value) };
+}
+
+// ---------------------------------------------------------------------------
 // Word Order: the weekly test's rearrange-the-sentence format
 // (class_material/17, slide 25). Chunks follow the slide's own cuts — 是 and
 // 不是 stay separate, so a V-not-V question has to be rebuilt, not recognised.
@@ -925,13 +975,14 @@ const RANGES = {
   sentences: SENTENCES,
   homophones: HOMOPHONE_GROUPS,
   combo: COMBO_PAIRS,
+  lookalikes: LOOKALIKES,
 };
 
 // Every question object from every pool, keyed by its unique `value`, so a
 // mistake logged in any mode can be looked back up regardless of which pool
 // it originally came from. "mistakes" itself isn't a fixed RANGES entry —
 // it's rebuilt from state.mistakes each time (see mistakesPool()).
-const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS];
+const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS, ...LOOKALIKES];
 const ENTRY_BY_VALUE = new Map(ALL_ENTRIES.map((e) => [e.value, e]));
 
 function mistakesPool() {
@@ -1098,7 +1149,7 @@ function pickNext() {
     showEmptyMistakes();
     return;
   }
-  const next = drawNext();
+  const next = presentable(drawNext());
   state.current = next;
   state.answered = false;
   const sentence = isSentence(next);
@@ -1239,7 +1290,7 @@ function refreshMistakesPoolIfActive() {
 // or combo pair encountered via Mistakes mode still gets its use cases shown.
 function appendUseCases() {
   const value = String(state.current.value);
-  if (!value.startsWith("homo-") && !value.startsWith("combo-")) return;
+  if (!/^(homo|combo|look)-/.test(value)) return;
   const lines = [...state.current.hanzi]
     .map((ch) => {
       const ex = CHAR_EXAMPLES.get(ch);
@@ -1250,7 +1301,9 @@ function appendUseCases() {
   const box = document.createElement("div");
   box.className = "use-cases";
   box.innerHTML =
-    `<div class="use-cases-title">Used in:</div>` + lines.map((l) => `<div>${l}</div>`).join("");
+    (state.current.note ? `<div class="lookalike-note">${state.current.note}</div>` : "") +
+    `<div class="use-cases-title">Used in:</div>` +
+    lines.map((l) => `<div>${l}</div>`).join("");
   feedback.appendChild(box);
 }
 
