@@ -181,16 +181,18 @@ function accentChar(letter, tone) {
 // Reconstructs the accented syllable a single space-separated word encodes,
 // or null if it's not a valid/complete syllable.
 function parseSyllableWord(rawWord) {
-  const word = rawWord.toLowerCase();
+  // A typed ü (phone keyboards may send u + a combining ¨, hence NFC) means
+  // the same as the v shortcut; any v left unmarked is written back as ü.
+  const word = rawWord.normalize("NFC").toLowerCase().replace(/ü/g, "v");
   const digitMatch = word.match(/^([a-z]*)([1-4])([a-z]*)$/);
   if (digitMatch) {
     const [, pre, toneStr, post] = digitMatch;
     if (!pre) return null; // digit with no preceding letter to mark
     const mark = accentChar(pre[pre.length - 1], parseInt(toneStr, 10));
     if (!mark) return null; // marked a consonant, not a vowel
-    return pre.slice(0, -1) + mark + post;
+    return (pre.slice(0, -1) + mark + post).replace(/v/g, "ü");
   }
-  if (ACCENTED_LETTER_RE.test(word)) return word; // already-accented input
+  if (ACCENTED_LETTER_RE.test(word)) return word.replace(/v/g, "ü"); // already-accented input
   return null;
 }
 
@@ -1044,16 +1046,20 @@ const lookupResult = document.getElementById("lookupResult");
 // Shared by the main answer input and the Quick Reference lookup input.
 function liveTransformInput(e) {
   const target = e.target;
-  const oldValue = target.value;
-  const cursorPos = target.selectionStart;
+  // Phone keyboards may type ü as u + a combining ¨; fold it into one ü first
+  // so the tone digit after it has a letter to land on.
+  const raw = target.value;
+  const oldValue = raw.normalize("NFC");
+  const cursorPos = raw.slice(0, target.selectionStart).normalize("NFC").length;
   let newValue = "";
   let newCursor = cursorPos;
   let i = 0;
   while (i < oldValue.length) {
     const letter = oldValue[i];
     const next = oldValue[i + 1];
-    if (next && /[aeiouv]/i.test(letter) && /[1-4]/.test(next)) {
-      const mark = accentChar(letter.toLowerCase(), parseInt(next, 10));
+    if (next && /[aeiouvü]/i.test(letter) && /[1-4]/.test(next)) {
+      const base = letter.toLowerCase() === "ü" ? "v" : letter.toLowerCase();
+      const mark = accentChar(base, parseInt(next, 10));
       if (mark) {
         newValue += mark;
         if (cursorPos > i) newCursor -= 1; // two chars collapsed into one
@@ -1064,7 +1070,7 @@ function liveTransformInput(e) {
     newValue += letter;
     i += 1;
   }
-  if (newValue !== oldValue) {
+  if (newValue !== raw) {
     target.value = newValue;
     target.setSelectionRange(newCursor, newCursor);
   }
