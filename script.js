@@ -54,13 +54,13 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-17), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-18), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
-// entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, and 妳/您/她/哪/家/呢/很
-// with PDF 17, whose divider now sits at the end of the third grid page.
-// Still left out: anything sourced only from title slides or example
-// sentences (e.g. 第/課 from "第一課", 起 from "一起").
+// entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
+// with PDF 17, and Lesson 2's 秋/節/餅/柚/烤/肉/祝/快/樂/第/張/怡/君/安/同/
+// 田/誠/哥/弟/妹 with PDF 18. Still left out: anything sourced only from
+// title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
 // 謝 in 謝謝, or 的/子/個/了/嗎/們) carry no accent, matching how the slides
 // themselves mark them. 不 appears twice with different tones — bù in 不可以
@@ -147,6 +147,34 @@ const WORD_DEFS = [
   [{ ch: "國", accented: "guó" }, { ch: "家", accented: "jiā" }], // 國家 country
   [{ ch: "呢", accented: "ne" }], // 呢 ...and you? (question particle)
   [{ ch: "很", accented: "hěn" }], // 很 very
+  // Lesson 2 (PDF 18)
+  [{ ch: "中", accented: "zhōng" }, { ch: "秋", accented: "qiū" }, { ch: "節", accented: "jié" }], // 中秋節 Mid-Autumn Festival
+  [{ ch: "月", accented: "yuè" }, { ch: "餅", accented: "bǐng" }], // 月餅 mooncake
+  [{ ch: "柚", accented: "yòu" }, { ch: "子", accented: "zi" }], // 柚子 pomelo
+  [{ ch: "烤", accented: "kǎo" }, { ch: "肉", accented: "ròu" }], // 烤肉 barbecue
+  [{ ch: "快", accented: "kuài" }, { ch: "樂", accented: "lè" }], // 快樂 happy
+  [
+    { ch: "祝", accented: "zhù" },
+    { ch: "你", accented: "nǐ" },
+    { ch: "生", accented: "shēng" },
+    { ch: "日", accented: "rì" },
+    { ch: "快", accented: "kuài" },
+    { ch: "樂", accented: "lè" },
+  ], // 祝你生日快樂 happy birthday
+  [{ ch: "第", accented: "dì" }, { ch: "二", accented: "èr" }, { ch: "課", accented: "kè" }], // 第二課 Lesson 2
+  [{ ch: "張", accented: "zhāng" }, { ch: "怡", accented: "yí" }, { ch: "君", accented: "jūn" }], // 張怡君 (name)
+  [{ ch: "馬", accented: "mǎ" }, { ch: "安", accented: "ān" }, { ch: "同", accented: "tóng" }], // 馬安同 (name)
+  [
+    { ch: "田", accented: "tián" },
+    { ch: "中", accented: "zhōng" },
+    { ch: "誠", accented: "chéng" },
+    { ch: "一", accented: "yī" },
+  ], // 田中誠一 (name)
+  [{ ch: "家", accented: "jiā" }, { ch: "人", accented: "rén" }], // 家人 family
+  [{ ch: "哥", accented: "gē" }, { ch: "哥", accented: "ge" }], // 哥哥 older brother
+  [{ ch: "姐", accented: "jiě" }, { ch: "姐", accented: "jie" }], // 姐姐 older sister
+  [{ ch: "弟", accented: "dì" }, { ch: "弟", accented: "di" }], // 弟弟 younger brother
+  [{ ch: "妹", accented: "mèi" }, { ch: "妹", accented: "mei" }], // 妹妹 younger sister
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -315,14 +343,14 @@ const LOOKALIKE_DEFS = [
   { chars: "開關問們", note: "All contain 門 (door)." },
   { chars: "馬媽嗎碼", note: "All contain 馬 (horse)." },
   { chars: "還迎這", note: "All have 辶, the “walk” radical." },
-  { chars: "謝課話請", note: "All have 訁, the “speech” radical, on the left." },
+  { chars: "謝課話請誠", note: "All have 訁, the “speech” radical, on the left." },
   { chars: "叫喝哪呢", note: "All have 口 (mouth) on the left." },
-  { chars: "好姐姓奶", note: "All have 女 (woman) on the left." },
+  { chars: "好姐姓奶妹", note: "All have 女 (woman) on the left." },
   { chars: "你妳您", note: "妳 swaps in 女 for a woman; 您 adds 心 underneath to be polite." },
   { chars: "他她", note: "亻 (person) vs 女 (woman) on the left." },
   { chars: "生星姓牛", note: "星 and 姓 contain 生; 牛 just looks like it." },
   { chars: "茶英華", note: "All have 艹 (grass) on top." },
-  { chars: "客家", note: "Both have 宀 (roof) on top." },
+  { chars: "客家安", note: "All have 宀 (roof) on top." },
   { chars: "電零", note: "Both have 雨 (rain) on top." },
   { chars: "紅綠", note: "Both have 糸 (silk) on the left." },
   { chars: "回四國", note: "All boxed in by 囗." },
@@ -339,6 +367,13 @@ const LOOKALIKE_DEFS = [
   { chars: "度麼房鹿", note: "All have a roof over the top left." },
   { chars: "烏馬", note: "Both end in four dots (灬)." },
   { chars: "本來機", note: "All built on 木 (tree)." },
+  // Lesson 2
+  { chars: "可哥", note: "哥 is 可 stacked twice." },
+  { chars: "弟第", note: "第 looks like 弟 with ⺮ (bamboo) on top." },
+  { chars: "第節", note: "Both have ⺮ (bamboo) on top." },
+  { chars: "日田", note: "日 is a box split once; 田 is split into four." },
+  { chars: "快怡", note: "Both have 忄 (heart) on the left." },
+  { chars: "秋烤", note: "Both contain 火 (fire)." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -423,6 +458,20 @@ const SENTENCE_DEFS = [
     end: "？",
     gloss: "Wang Kaiwen is coming to India — do you have his phone number?",
   },
+  // Lesson 2 (PDF 18): greetings, 對話二, and the 很 / V-not-V slide.
+  { chunks: ["祝", "你", "生日", "快樂"], end: "。", gloss: "Happy birthday to you." },
+  { chunks: ["祝", "你", "中秋節", "快樂"], end: "。", gloss: "Happy Mid-Autumn Festival to you." },
+  { chunks: ["台灣人", "喜歡", "喝", "茶"], end: "。", gloss: "Taiwanese people like drinking tea." },
+  { chunks: ["日本", "茶", "好喝", "嗎"], end: "？", gloss: "Is Japanese tea good?" },
+  { chunks: ["陳小姐的", "奶奶", "不", "老"], end: "。", gloss: "Miss Chen's grandma isn't old." },
+  {
+    chunks: ["我", "不", "喝", "咖啡，", "我", "喜歡", "喝", "茶"],
+    alts: [
+      { chunks: ["我", "喜歡", "喝", "咖啡，", "我", "不", "喝", "茶"], gloss: "I like drinking coffee — I don't drink tea." },
+    ],
+    end: "。",
+    gloss: "I don't drink coffee — I like drinking tea.",
+  },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -442,9 +491,11 @@ function sentencePinyin(chunks, end) {
     const cjk = [...c].filter((ch) => CHAR_PINYIN.has(ch));
     const missing = [...c].filter((ch) => /\p{Script=Han}/u.test(ch) && !CHAR_PINYIN.has(ch));
     if (missing.length) console.error(`Word Order: ${missing.join("")} in "${c}" is not in the syllabus`);
-    // Standard pinyin apostrophe before an a/o/e syllable: xīngqí'èr, not xīngqíèr.
     const word = cjk
       .map(() => syl[k++])
+      // A doubled character is neutral the second time: 哥哥 gēge, 奶奶 nǎinai.
+      .map((s, i) => (i > 0 && cjk[i] === cjk[i - 1] ? toBaseSyllable(s).replace(/v/g, "ü") : s))
+      // Standard pinyin apostrophe before an a/o/e syllable: xīngqí'èr, not xīngqíèr.
       .map((s, i) => (i > 0 && /^[aeoāáǎàēéěèōóǒò]/.test(s) ? `'${s}` : s))
       .join("");
     return c.endsWith("，") ? `${word},` : word;
@@ -488,6 +539,8 @@ const LEX = {
     { zh: "班代", en: "the class rep", be: "is", s3: true },
     { zh: "那個人", en: "that person", be: "is", s3: true },
     { zh: "那個小姐", en: "that woman", be: "is", s3: true },
+    { zh: "張小姐", en: "Miss Zhang", be: "is", s3: true },
+    { zh: "田中先生", en: "Mr. Tanaka", be: "is", s3: true },
   ],
   drink: [
     { zh: "綠茶", en: "green tea", brewed: true },
@@ -497,6 +550,7 @@ const LEX = {
     { zh: "咖啡", en: "coffee", brewed: true },
     { zh: "牛奶", en: "milk" },
     { zh: "水", en: "water" },
+    { zh: "茶", en: "tea", brewed: true },
   ],
   place: [
     { zh: "台灣", en: "Taiwan", adj: "Taiwanese" },
@@ -539,6 +593,13 @@ const LEX = {
     { zh: "陳", en: "Chen" },
     { zh: "李", en: "Li" },
     { zh: "王", en: "Wang" },
+    { zh: "張", en: "Zhang" },
+  ],
+  // `vnv` is the V-not-V pair, split as on the slide: 快 / 不快樂.
+  adjective: [
+    { zh: "快樂", en: "happy", vnv: ["快", "不快樂"] },
+    { zh: "美", en: "beautiful", vnv: ["美", "不美"] },
+    { zh: "老", en: "old", vnv: ["老", "不老"] },
   ],
 };
 
@@ -549,7 +610,16 @@ const wordKey = (w) => T(w).join("|");
 // Longer noun phrases, used more at higher levels: 我的老師 / 美國老師 /
 // 印度奶茶. Each stays two tiles, so they also make the puzzle longer.
 for (const p of LEX.person.filter((w) => w.pro)) {
-  for (const role of [{ zh: "老師", en: "teacher" }, { zh: "班代", en: "class rep" }]) {
+  for (const role of [
+    { zh: "老師", en: "teacher" },
+    { zh: "班代", en: "class rep" },
+    { zh: "爸爸", en: "dad" },
+    { zh: "媽媽", en: "mom" },
+    { zh: "哥哥", en: "older brother" },
+    { zh: "姐姐", en: "older sister" },
+    { zh: "弟弟", en: "younger brother" },
+    { zh: "妹妹", en: "younger sister" },
+  ]) {
     LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
   }
 }
@@ -698,6 +768,19 @@ const PATTERNS = [
         form === "stmt" ? `${d.en} is really good.`
         : form === "neg" ? `${d.en} isn't good.`
         : `is ${d.en} good?`,
+    }),
+  },
+  {
+    id: "adj",
+    slots: ["person", "adjective"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, a], form) => ({
+      subject: T(s),
+      pred: { stmt: ["很", a.zh], ma: [a.zh, "嗎"], vnv: a.vnv, neg: ["不", a.zh] }[form],
+      en:
+        form === "stmt" ? `${s.en} ${s.be} very ${a.en}.`
+        : form === "neg" ? `${s.en} ${s.be} not ${a.en}.`
+        : `${s.be} ${s.en} ${a.en}?`,
     }),
   },
   {
