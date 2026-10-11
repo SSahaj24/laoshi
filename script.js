@@ -54,12 +54,13 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-18), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-20), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
 // entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
 // with PDF 17, and Lesson 2's 秋/節/餅/柚/烤/肉/祝/快/樂/第/張/怡/君/安/同/
-// 田/誠/哥/弟/妹 with PDF 18. Still left out: anything sourced only from
+// 田/誠/哥/弟/妹 with PDF 18, 幾/誰/進/坐/看/照/相 with PDF 19 and 片 with
+// PDF 20 (past the divider, but the weekly test runs "till 片"). Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
 // 謝 in 謝謝, or 的/子/個/了/嗎/們) carry no accent, matching how the slides
@@ -175,6 +176,20 @@ const WORD_DEFS = [
   [{ ch: "姐", accented: "jiě" }, { ch: "姐", accented: "jie" }], // 姐姐 older sister
   [{ ch: "弟", accented: "dì" }, { ch: "弟", accented: "di" }], // 弟弟 younger brother
   [{ ch: "妹", accented: "mèi" }, { ch: "妹", accented: "mei" }], // 妹妹 younger sister
+  // PDF 19-20
+  [{ ch: "幾", accented: "jǐ" }], // 幾 how many
+  [{ ch: "誰", accented: "shéi" }], // 誰 who
+  [{ ch: "請", accented: "qǐng" }, { ch: "進", accented: "jìn" }], // 請進 please come in
+  [{ ch: "進", accented: "jìn" }, { ch: "來", accented: "lái" }], // 進來 come in
+  [{ ch: "進", accented: "jìn" }, { ch: "去", accented: "qù" }], // 進去 go in
+  [{ ch: "請", accented: "qǐng" }, { ch: "坐", accented: "zuò" }], // 請坐 please sit
+  [{ ch: "看", accented: "kàn" }], // 看 to look, watch
+  [{ ch: "課", accented: "kè" }, { ch: "本", accented: "běn" }], // 課本 textbook
+  [{ ch: "照", accented: "zhào" }, { ch: "相", accented: "xiàng" }], // 照相 take a photo
+  [{ ch: "照", accented: "zhào" }, { ch: "片", accented: "piàn" }], // 照片 photo
+  [{ ch: "相", accented: "xiàng" }, { ch: "片", accented: "piàn" }], // 相片 photo
+  [{ ch: "好", accented: "hǎo" }, { ch: "看", accented: "kàn" }], // 好看 good-looking
+  [{ ch: "可", accented: "kě" }, { ch: "是", accented: "shì" }], // 可是 but
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -374,6 +389,12 @@ const LOOKALIKE_DEFS = [
   { chars: "日田", note: "日 is a box split once; 田 is split into four." },
   { chars: "快怡", note: "Both have 忄 (heart) on the left." },
   { chars: "秋烤", note: "Both contain 火 (fire)." },
+  // PDF 19-20
+  { chars: "誰進", note: "Both contain 隹 — 訁 (speech) for 誰, 辶 (walk) for 進." },
+  { chars: "幾機", note: "機 is 木 (tree) + 幾." },
+  { chars: "看相", note: "Both contain 目 (eye)." },
+  { chars: "照烏馬", note: "All end in four dots (灬)." },
+  { chars: "進還迎這", note: "All have 辶, the “walk” radical." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -472,6 +493,46 @@ const SENTENCE_DEFS = [
     end: "。",
     gloss: "I don't drink coffee — I like drinking tea.",
   },
+  // PDF 19: the word-order test slide, then the 幾 / 誰 / 看 / 照相 examples.
+  { chunks: ["你", "要", "來", "印度", "喝", "奶茶", "嗎"], end: "？", gloss: "Will you come to India to drink milk tea?" },
+  { chunks: ["請問", "您", "是", "陳中華", "老師", "嗎"], end: "？", gloss: "Excuse me, are you Teacher Chen Zhonghua?" },
+  { chunks: ["你的", "老師", "要", "不要", "喝", "牛奶"], end: "？", gloss: "Does your teacher want milk?" },
+  {
+    chunks: ["我", "星期五", "要", "去", "印度", "喝", "奶茶"],
+    alts: [["星期五", "我", "要", "去", "印度", "喝", "奶茶"]],
+    end: "。",
+    gloss: "On Friday I'm going to India to drink milk tea.",
+  },
+  {
+    chunks: ["他們", "來", "接", "我", "去", "上", "英文", "課"],
+    alts: [{ chunks: ["我", "來", "接", "他們", "去", "上", "英文", "課"], gloss: "I'm coming to take them to English class." }],
+    end: "。",
+    gloss: "They're coming to take me to English class.",
+  },
+  { chunks: ["老師", "很", "喜歡", "喝", "台灣", "烏龍茶"], end: "。", gloss: "The teacher really likes Taiwanese oolong tea." },
+  { chunks: ["你的", "生日", "是", "幾月", "幾號"], end: "？", gloss: "What date is your birthday?" },
+  { chunks: ["你", "有", "幾個", "台灣", "老師"], end: "？", gloss: "How many Taiwanese teachers do you have?" },
+  {
+    chunks: ["誰", "是", "你的", "英文", "老師"],
+    alts: [["你的", "英文", "老師", "是", "誰"]],
+    end: "？",
+    gloss: "Who is your English teacher?",
+  },
+  { chunks: ["請問，", "誰的", "姐姐", "喜歡", "喝", "咖啡"], end: "？", gloss: "Excuse me, whose older sister likes coffee?" },
+  {
+    chunks: ["老師", "叫", "我們", "看", "課本"],
+    alts: [{ chunks: ["我們", "叫", "老師", "看", "課本"], gloss: "We tell the teacher to read the textbook." }],
+    end: "。",
+    gloss: "The teacher tells us to read the textbook.",
+  },
+  { chunks: ["開文", "不", "喜歡", "看", "英文", "課本"], end: "。", gloss: "Kaiwen doesn't like reading the English textbook." },
+  { chunks: ["弟弟", "很", "喜歡", "照相"], end: "。", gloss: "Younger brother really likes taking photos." },
+  { chunks: ["英文", "老師", "不", "要", "照相"], end: "。", gloss: "The English teacher doesn't want a photo taken." },
+  { chunks: ["誰的", "家人", "喜歡", "照相"], end: "？", gloss: "Whose family likes taking photos?" },
+  // PDF 20: 照片 / 相片 with 張 as the measure word.
+  { chunks: ["你", "有", "老師的", "照片", "嗎"], end: "？", gloss: "Do you have a photo of the teacher?" },
+  { chunks: ["誠一", "很", "喜歡", "那張", "相片"], end: "。", gloss: "Seiichi really likes that photo." },
+  { chunks: ["這", "三張", "照片", "是", "奶奶的"], end: "。", gloss: "These three photos are Grandma's." },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -588,6 +649,7 @@ const LEX = {
     { zh: "手機", en: "a mobile phone" },
     { zh: "房子", en: "a house" },
     { zh: "問題", en: "a question" },
+    { zh: "照片", en: "a photo" },
   ],
   surname: [
     { zh: "陳", en: "Chen" },
@@ -600,6 +662,7 @@ const LEX = {
     { zh: "快樂", en: "happy", vnv: ["快", "不快樂"] },
     { zh: "美", en: "beautiful", vnv: ["美", "不美"] },
     { zh: "老", en: "old", vnv: ["老", "不老"] },
+    { zh: "好看", en: "good-looking", vnv: ["好", "不好看"] },
   ],
 };
 
@@ -781,6 +844,25 @@ const PATTERNS = [
         form === "stmt" ? `${s.en} ${s.be} very ${a.en}.`
         : form === "neg" ? `${s.en} ${s.be} not ${a.en}.`
         : `${s.be} ${s.en} ${a.en}?`,
+    }),
+  },
+  {
+    // 弟弟很喜歡照相 (PDF 19).
+    id: "photo",
+    slots: ["person"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s], form) => ({
+      subject: T(s),
+      pred: {
+        stmt: ["很", "喜歡", "照相"],
+        ma: ["喜歡", "照相", "嗎"],
+        vnv: ["喜", "不喜歡", "照相"],
+        neg: ["不", "喜歡", "照相"],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} really ${third(s, "like", "likes")} taking photos.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} like taking photos.`
+        : `${does(s)} ${s.en} like taking photos?`,
     }),
   },
   {
