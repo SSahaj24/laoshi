@@ -54,13 +54,15 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-20), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-22), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
 // entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
 // with PDF 17, and Lesson 2's 秋/節/餅/柚/烤/肉/祝/快/樂/第/張/怡/君/安/同/
 // 田/誠/哥/弟/妹 with PDF 18, 幾/誰/進/坐/看/照/相 with PDF 19 and 片 with
-// PDF 20 (past the divider, but the weekly test runs "till 片"). Still left out: anything sourced only from
+// PDF 20 (past the divider, but the weekly test runs "till 片"), 漂/亮/多/都
+// with PDF 21, and 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩").
+// Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
 // 謝 in 謝謝, or 的/子/個/了/嗎/們) carry no accent, matching how the slides
@@ -190,6 +192,24 @@ const WORD_DEFS = [
   [{ ch: "相", accented: "xiàng" }, { ch: "片", accented: "piàn" }], // 相片 photo
   [{ ch: "好", accented: "hǎo" }, { ch: "看", accented: "kàn" }], // 好看 good-looking
   [{ ch: "可", accented: "kě" }, { ch: "是", accented: "shì" }], // 可是 but
+  // PDF 21-22
+  [{ ch: "漂", accented: "piào" }, { ch: "亮", accented: "liàng" }], // 漂亮 pretty
+  [{ ch: "多", accented: "duō" }], // 多 many, much
+  [{ ch: "很", accented: "hěn" }, { ch: "多", accented: "duō" }], // 很多 a lot of
+  [{ ch: "都", accented: "dōu" }], // 都 all, both
+  [{ ch: "兄", accented: "xiōng" }, { ch: "弟", accented: "dì" }], // 兄弟 brothers
+  [{ ch: "姐", accented: "jiě" }, { ch: "妹", accented: "mèi" }], // 姐妹 sisters
+  [{ ch: "兄", accented: "xiōng" }, { ch: "弟", accented: "dì" }, { ch: "姐", accented: "jiě" }, { ch: "妹", accented: "mèi" }], // 兄弟姐妹 siblings
+  [{ ch: "伯", accented: "bó" }, { ch: "伯", accented: "bo" }], // 伯伯 uncle (dad's older brother)
+  [{ ch: "叔", accented: "shú" }, { ch: "叔", accented: "shu" }], // 叔叔 uncle (dad's younger brother)
+  [{ ch: "阿", accented: "ā" }, { ch: "姨", accented: "yí" }], // 阿姨 aunt (mom's sister)
+  [{ ch: "名", accented: "míng" }, { ch: "字", accented: "zi" }], // 名字 name
+  [{ ch: "書", accented: "shū" }], // 書 book
+  [{ ch: "看", accented: "kàn" }, { ch: "書", accented: "shū" }], // 看書 read a book
+  [{ ch: "兩", accented: "liǎng" }], // 兩 two (of something)
+  [{ ch: "兩", accented: "liǎng" }, { ch: "本", accented: "běn" }, { ch: "書", accented: "shū" }], // 兩本書 two books
+  [{ ch: "兩", accented: "liǎng" }, { ch: "張", accented: "zhāng" }, { ch: "照", accented: "zhào" }, { ch: "片", accented: "piàn" }], // 兩張照片 two photos
+  [{ ch: "中", accented: "zhōng" }, { ch: "文", accented: "wén" }], // 中文 Chinese (language)
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -395,6 +415,14 @@ const LOOKALIKE_DEFS = [
   { chars: "看相", note: "Both contain 目 (eye)." },
   { chars: "照烏馬", note: "All end in four dots (灬)." },
   { chars: "進還迎這", note: "All have 辶, the “walk” radical." },
+  // PDF 21-22
+  { chars: "都那阿陳", note: "All have 阝 — on the right in 都 and 那, on the left in 阿 and 陳." },
+  { chars: "名多", note: "Both built from 夕 — 多 is two of them, 名 is 夕 over 口." },
+  { chars: "祝兄", note: "祝 is 礻 + 兄." },
+  { chars: "伯他們代你", note: "All have 亻 (person) on the left." },
+  { chars: "漂沒灣", note: "All have 氵 (water) on the left." },
+  { chars: "字客家安", note: "All have 宀 (roof) on top — 字 is 子 under it." },
+  { chars: "姨好姐姓奶妹", note: "All have 女 (woman) on the left." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -533,6 +561,89 @@ const SENTENCE_DEFS = [
   { chunks: ["你", "有", "老師的", "照片", "嗎"], end: "？", gloss: "Do you have a photo of the teacher?" },
   { chunks: ["誠一", "很", "喜歡", "那張", "相片"], end: "。", gloss: "Seiichi really likes that photo." },
   { chunks: ["這", "三張", "照片", "是", "奶奶的"], end: "。", gloss: "These three photos are Grandma's." },
+  // PDF 21: 好看 / 漂亮 / 多 / 都, the modification-marker drill and 對話一.
+  { chunks: ["安同的", "妹妹", "很", "好看"], end: "。", gloss: "Antong's younger sister is very good-looking." },
+  { chunks: ["這個", "房子", "不", "好看"], end: "。", gloss: "This house isn't nice-looking." },
+  { chunks: ["那張", "相片", "好看", "嗎"], end: "？", gloss: "Is that photo nice?" },
+  { chunks: ["怡君的", "老師", "不", "漂亮"], end: "。", gloss: "Yijun's teacher isn't pretty." },
+  { chunks: ["誠一的", "姐姐", "漂亮", "嗎"], end: "？", gloss: "Is Seiichi's older sister pretty?" },
+  { chunks: ["安同", "有", "很多", "好看的", "照片"], end: "。", gloss: "Antong has lots of nice photos." },
+  { chunks: ["他的", "家人", "多", "不多"], end: "？", gloss: "Does he have a big family?" },
+  {
+    chunks: ["今天", "我", "有", "很多", "課"],
+    alts: [["我", "今天", "有", "很多", "課"]],
+    end: "。",
+    gloss: "I have a lot of classes today.",
+  },
+  { chunks: ["今天", "我的", "課", "很", "多"], end: "。", gloss: "I have a lot of classes today." },
+  { chunks: ["開文、月美", "都", "是", "台灣人"], end: "。", gloss: "Kaiwen and Yuemei are both Taiwanese." },
+  { chunks: ["他們", "都", "姓", "張"], end: "。", gloss: "Their surname is Zhang, all of them." },
+  { chunks: ["咖啡、茶，", "我", "都", "喜歡", "喝"], end: "。", gloss: "Coffee and tea — I like drinking both." },
+  { chunks: ["英國、日本，", "媽媽", "都", "要", "去"], end: "。", gloss: "The UK and Japan — Mom wants to go to both." },
+  {
+    chunks: ["怡君、安同", "都", "不", "喝", "咖啡"],
+    alts: [{ chunks: ["怡君、安同", "不", "都", "喝", "咖啡"], gloss: "Yijun and Antong don't both drink coffee." }],
+    end: "。",
+    gloss: "Neither Yijun nor Antong drinks coffee.",
+  },
+  {
+    chunks: ["今天", "我們", "都", "沒", "課"],
+    alts: [["我們", "今天", "都", "沒", "課"]],
+    end: "。",
+    gloss: "None of us have class today.",
+  },
+  {
+    chunks: ["我們班", "不", "都", "是", "美國人"],
+    alts: [{ chunks: ["我們班", "都", "不", "是", "美國人"], gloss: "Nobody in our class is American." }],
+    end: "。",
+    gloss: "Not everyone in our class is American.",
+  },
+  {
+    chunks: ["印度人", "不", "都", "喝", "奶茶"],
+    alts: [{ chunks: ["印度人", "都", "不", "喝", "奶茶"], gloss: "No Indians drink milk tea." }],
+    end: "。",
+    gloss: "Not all Indians drink milk tea.",
+  },
+  { chunks: ["你們", "都", "是", "老師"], end: "。", gloss: "You're both teachers." },
+  { chunks: ["我們", "都", "喜歡", "喝", "咖啡"], end: "。", gloss: "We both like drinking coffee." },
+  {
+    chunks: ["你們", "都", "不", "要", "照相"],
+    alts: [{ chunks: ["你們", "不", "都", "要", "照相"], gloss: "You don't both want a photo taken." }],
+    end: "。",
+    gloss: "Neither of you wants a photo taken.",
+  },
+  { chunks: ["很好看的", "人", "多", "不多"], end: "？", gloss: "Are there many good-looking people?" },
+  { chunks: ["王老師", "要", "好喝的", "茶"], end: "。", gloss: "Teacher Wang wants good tea." },
+  { chunks: ["我", "沒有", "很多", "好看的", "照片"], end: "。", gloss: "I don't have many nice photos." },
+  { chunks: ["我", "喜歡", "漂亮的", "房子"], end: "。", gloss: "I like pretty houses." },
+  { chunks: ["你家", "有", "很多", "照片"], end: "。", gloss: "Your home has lots of photos." },
+  { chunks: ["我", "家人", "都", "喜歡", "照相"], end: "。", gloss: "Everyone in my family likes taking photos." },
+  { chunks: ["這張", "照片", "很", "好看"], end: "。", gloss: "This photo is really nice." },
+  { chunks: ["你", "家人", "都", "很", "好看"], end: "。", gloss: "Your family are all good-looking." },
+  // PDF 22: 兄弟姐妹, 伯伯 / 叔叔 / 阿姨, 名字, 書, 兩 and 對話二.
+  { chunks: ["他的", "姐妹", "都", "很", "好看"], end: "。", gloss: "His sisters are all good-looking." },
+  { chunks: ["你的", "兄弟", "叫", "你", "喝", "茶"], end: "。", gloss: "Your brother is telling you to drink tea." },
+  { chunks: ["張小姐", "有", "六個", "兄弟姐妹"], end: "。", gloss: "Miss Zhang has six brothers and sisters." },
+  {
+    chunks: ["爸爸的", "哥哥", "是", "伯伯"],
+    alts: [["伯伯", "是", "爸爸的", "哥哥"]],
+    end: "。",
+    gloss: "Dad's older brother is 伯伯.",
+  },
+  { chunks: ["爸爸的", "弟弟", "叫", "叔叔"], end: "。", gloss: "Dad's younger brother is called 叔叔." },
+  { chunks: ["媽媽的", "姐妹", "叫", "阿姨"], end: "。", gloss: "Mom's sisters are called 阿姨." },
+  { chunks: ["你", "叫", "什麼", "名字"], end: "？", gloss: "What's your name?" },
+  { chunks: ["你", "有", "中文", "名字", "嗎"], end: "？", gloss: "Do you have a Chinese name?" },
+  { chunks: ["弟弟", "不", "喜歡", "看", "書"], end: "。", gloss: "Younger brother doesn't like reading." },
+  { chunks: ["這本", "書", "很", "好看"], end: "。", gloss: "This book is really good." },
+  { chunks: ["老師", "有", "一本", "好看的", "英文", "書"], end: "。", gloss: "The teacher has a good English book." },
+  { chunks: ["你們家", "有", "很多", "書"], end: "。", gloss: "Your home has a lot of books." },
+  { chunks: ["都", "是", "我哥哥的", "書"], end: "。", gloss: "They're all my older brother's books." },
+  { chunks: ["他", "很", "喜歡", "看", "書"], end: "。", gloss: "He really likes reading." },
+  { chunks: ["你家", "有", "幾個", "人"], end: "？", gloss: "How many people are in your family?" },
+  { chunks: ["你", "有", "沒有", "兄弟姐妹"], end: "？", gloss: "Do you have any brothers or sisters?" },
+  { chunks: ["我家", "有", "五個", "人，", "我", "有", "兩個", "妹妹"], end: "。", gloss: "There are five of us in my family — I have two younger sisters." },
+  { chunks: ["我", "有", "兩張", "奶奶的", "照片"], end: "。", gloss: "I have two photos of Grandma." },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -546,19 +657,28 @@ function sentencePinyin(chunks, end) {
   const syl = chars.map((ch) => CHAR_PINYIN.get(ch));
   chars.forEach((ch, i) => {
     if (ch === "不") syl[i] = FOURTH_TONE_RE.test(syl[i + 1] || "") ? "bú" : "bù";
+    // 一 before a measure word: yí before 個 (underlyingly gè), yì before
+    // 本 / 張. Elsewhere (誠一, 星期一, 第一) it stays yī.
+    if (ch === "一" && "個本張".includes(chars[i + 1] || "")) syl[i] = chars[i + 1] === "個" ? "yí" : "yì";
   });
   let k = 0;
   const words = chunks.map((c) => {
-    const cjk = [...c].filter((ch) => CHAR_PINYIN.has(ch));
     const missing = [...c].filter((ch) => /\p{Script=Han}/u.test(ch) && !CHAR_PINYIN.has(ch));
     if (missing.length) console.error(`Word Order: ${missing.join("")} in "${c}" is not in the syllabus`);
-    const word = cjk
-      .map(() => syl[k++])
-      // A doubled character is neutral the second time: 哥哥 gēge, 奶奶 nǎinai.
-      .map((s, i) => (i > 0 && cjk[i] === cjk[i - 1] ? toBaseSyllable(s).replace(/v/g, "ü") : s))
-      // Standard pinyin apostrophe before an a/o/e syllable: xīngqí'èr, not xīngqíèr.
-      .map((s, i) => (i > 0 && /^[aeoāáǎàēéěèōóǒò]/.test(s) ? `'${s}` : s))
-      .join("");
+    // 、 lists words inside one tile (開文、月美), so each part is its own word.
+    const word = c
+      .split("、")
+      .map((part) => {
+        const han = [...part].filter((ch) => CHAR_PINYIN.has(ch));
+        return han
+          .map(() => syl[k++])
+          // A doubled character is neutral the second time: 哥哥 gēge, 奶奶 nǎinai.
+          .map((s, i) => (i > 0 && han[i] === han[i - 1] ? toBaseSyllable(s).replace(/v/g, "ü") : s))
+          // Standard pinyin apostrophe before an a/o/e syllable: xīngqí'èr, not xīngqíèr.
+          .map((s, i) => (i > 0 && /^[aeoāáǎàēéěèōóǒò]/.test(s) ? `'${s}` : s))
+          .join("");
+      })
+      .join(", ");
     return c.endsWith("，") ? `${word},` : word;
   });
   return words.join(" ") + (end === "？" ? "?" : ".");
@@ -650,6 +770,8 @@ const LEX = {
     { zh: "房子", en: "a house" },
     { zh: "問題", en: "a question" },
     { zh: "照片", en: "a photo" },
+    { zh: "書", en: "a book" },
+    { zh: "中文名字", en: "a Chinese name" },
   ],
   surname: [
     { zh: "陳", en: "Chen" },
@@ -663,6 +785,7 @@ const LEX = {
     { zh: "美", en: "beautiful", vnv: ["美", "不美"] },
     { zh: "老", en: "old", vnv: ["老", "不老"] },
     { zh: "好看", en: "good-looking", vnv: ["好", "不好看"] },
+    { zh: "漂亮", en: "pretty", vnv: ["漂", "不漂亮"] },
   ],
 };
 
@@ -682,6 +805,9 @@ for (const p of LEX.person.filter((w) => w.pro)) {
     { zh: "姐姐", en: "older sister" },
     { zh: "弟弟", en: "younger brother" },
     { zh: "妹妹", en: "younger sister" },
+    { zh: "伯伯", en: "uncle" },
+    { zh: "叔叔", en: "uncle" },
+    { zh: "阿姨", en: "aunt" },
   ]) {
     LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
   }
@@ -699,6 +825,9 @@ for (const cat of Object.keys(LEX)) {
 }
 // 姓 only makes sense with a singular pronoun — 陳先生姓王 contradicts itself.
 LEX.pronoun = LEX.person.filter((p) => p.pro && !p.plural);
+// 都 needs a group: 我們 / 你們 / 他們.
+LEX.plural = LEX.person.filter((p) => p.pro && p.plural);
+const ofThem = (p) => p.obj.replace(" all", "");
 
 const does = (p) => (p.s3 ? "does" : "do");
 const doesnt = (p) => (p.s3 ? "doesn't" : "don't");
@@ -844,6 +973,39 @@ const PATTERNS = [
         form === "stmt" ? `${s.en} ${s.be} very ${a.en}.`
         : form === "neg" ? `${s.en} ${s.be} not ${a.en}.`
         : `${s.be} ${s.en} ${a.en}?`,
+    }),
+  },
+  {
+    // 他們都是台灣人 / 都不是 / 不都是 — where 都 sits against 不 decides
+    // "none" vs "not all" (PDF 21).
+    id: "allNat",
+    slots: ["plural", "nationality"],
+    forms: ["all", "none", "notAll"],
+    build: ([s, n], form) => ({
+      subject: T(s),
+      pred: { all: ["都", "是", n.zh], none: ["都", "不", "是", n.zh], notAll: ["不", "都", "是", n.zh] }[form],
+      en:
+        form === "all" ? `${ofThem(s) === "you" ? "you" : s.en} are all ${n.en}.`
+        : form === "none" ? `none of ${ofThem(s)} are ${n.en}.`
+        : `not all of ${ofThem(s)} are ${n.en}.`,
+    }),
+  },
+  {
+    // 我們都喜歡喝咖啡 / 都不喜歡 / 不都喜歡.
+    id: "allLike",
+    slots: ["plural", "drink"],
+    forms: ["all", "none", "notAll"],
+    build: ([s, d], form) => ({
+      subject: T(s),
+      pred: {
+        all: ["都", "喜歡", "喝", ...T(d)],
+        none: ["都", "不", "喜歡", "喝", ...T(d)],
+        notAll: ["不", "都", "喜歡", "喝", ...T(d)],
+      }[form],
+      en:
+        form === "all" ? `${ofThem(s) === "you" ? "you" : s.en} all like drinking ${d.en}.`
+        : form === "none" ? `none of ${ofThem(s)} like drinking ${d.en}.`
+        : `not all of ${ofThem(s)} like drinking ${d.en}.`,
     }),
   },
   {
