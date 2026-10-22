@@ -1,4 +1,8 @@
 :root {
+  /* 標楷體, the 楷書 school font the class slides use. Windows (DFKai-SB) and
+     macOS (BiauKai / Kaiti TC) ship it; elsewhere LXGW WenKai TC, a free
+     Kaiti from Google Fonts, stands in. */
+  --font-hanzi: "DFKai-SB", "標楷體", "BiauKai", "Kaiti TC", "LXGW WenKai TC", serif;
   --bg: #fdf6ee;
   --card-bg: #ffffff;
   --ink: #2a1e17;
@@ -229,9 +233,9 @@ body {
 }
 
 .hanzi {
-  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-family: var(--font-hanzi);
   font-size: clamp(3rem, 14vw, 4.5rem);
-  font-weight: 700;
+  font-weight: 400; /* 楷書 has no bold */
   color: var(--ink);
   letter-spacing: 0.05em;
   min-height: 1.2em;
@@ -449,7 +453,7 @@ body {
 }
 
 .chunk {
-  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-family: var(--font-hanzi);
   font-size: 1.45rem;
   padding: 8px 14px;
   border: 1.5px solid var(--border);
@@ -484,9 +488,9 @@ body {
 }
 
 .sentence-hanzi {
-  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
+  font-family: var(--font-hanzi);
   font-size: 1.6em;
-  font-weight: 600;
+  font-weight: 400; /* 楷書 has no bold */
   letter-spacing: 0.04em;
 }
 
@@ -617,8 +621,8 @@ body {
 }
 
 .lookup-chars {
-  font-family: "PingFang TC", "Microsoft JhengHei", "Heiti TC", "Noto Sans TC", "Noto Sans CJK TC", sans-serif;
-  font-weight: 700;
+  font-family: var(--font-hanzi);
+  font-weight: 400; /* 楷書 has no bold */
   font-size: 1.2em;
 }
 
