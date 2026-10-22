@@ -676,6 +676,22 @@ body {
   letter-spacing: 0.05em;
 }
 
+.class-progress {
+  flex-basis: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.class-progress .done {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   /* Stack the button under the input so the answer gets the full card width. */
   .answer-form {

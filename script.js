@@ -1442,6 +1442,26 @@ const STORAGE_KEY = "laoshi_numbers_best_streak";
 const MISTAKES_KEY = "laoshi_mistakes";
 const LEVEL_KEY = "laoshi_sentence_level";
 const CLASS_KEY = "laoshi_class";
+const COVERED_KEY = "laoshi_class_covered";
+
+// By Class progress: per class (keyed by PDF number, which never changes),
+// the cards answered right first time.
+function loadCovered() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(COVERED_KEY));
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCovered() {
+  try {
+    localStorage.setItem(COVERED_KEY, JSON.stringify(state.covered));
+  } catch {
+    /* ignore (e.g. storage disabled) */
+  }
+}
 
 // Defaults to the latest class — usually the one being studied.
 function loadClass() {
@@ -1493,6 +1513,7 @@ const state = {
   mistakes: loadMistakes(), // Set of `value`s answered wrong/skipped, persisted
   level: loadLevel(), // Word Order difficulty
   classIndex: loadClass(), // By Class session
+  covered: loadCovered(), // By Class progress: { pdf: [value, ...] }
 };
 
 // Fisher-Yates shuffle (does not mutate the input).
@@ -1531,6 +1552,8 @@ const levelSelect = document.getElementById("levelSelect");
 const classSelect = document.getElementById("classSelect");
 const classPick = document.getElementById("classPick");
 const classNew = document.getElementById("classNew");
+const classCovered = document.getElementById("classCovered");
+const resetClassBtn = document.getElementById("resetClassBtn");
 const sentenceBuilder = document.getElementById("sentenceBuilder");
 const sentenceAnswer = document.getElementById("sentenceAnswer");
 const sentenceBank = document.getElementById("sentenceBank");
@@ -1999,6 +2022,7 @@ function gradeAnswer(isCorrect) {
       saveBest(state.best);
     }
     clearMistake(state.current.value);
+    markCovered(state.current);
   } else {
     state.streak = 0;
     addMistake(state.current.value);
@@ -2088,11 +2112,44 @@ function setClass(i) {
   }
   classPick.value = String(i);
   classNew.textContent = `New: ${CLASSES[i].chars.split("").join(" ")}`;
+  updateClassCovered();
   if (state.range === "classes") {
     state.pool = CLASS_POOLS[i];
     state.deck = [];
     pickNext();
   }
+}
+
+function coveredInClass(i) {
+  const done = new Set(state.covered[CLASSES[i].pdf] || []);
+  return CLASS_POOLS[i].filter((e) => done.has(String(e.value))).length;
+}
+
+function updateClassCovered() {
+  const i = state.classIndex;
+  const total = CLASS_POOLS[i].length;
+  const done = coveredInClass(i);
+  classCovered.textContent = done === total ? `All ${total} covered ✓` : `Covered ${done} / ${total}`;
+  classCovered.classList.toggle("done", done === total);
+  resetClassBtn.classList.toggle("hidden", done === 0);
+}
+
+function markCovered(entry) {
+  if (state.range !== "classes") return;
+  const key = CLASSES[state.classIndex].pdf;
+  const list = state.covered[key] || (state.covered[key] = []);
+  if (list.includes(String(entry.value))) return;
+  list.push(String(entry.value));
+  saveCovered();
+  updateClassCovered();
+}
+
+function resetClassCovered() {
+  const c = CLASSES[state.classIndex];
+  if (!window.confirm(`Reset progress for PDF ${c.pdf} · ${c.date}?`)) return;
+  delete state.covered[c.pdf];
+  saveCovered();
+  updateClassCovered();
 }
 
 // Newest first, since the latest class is the one most often wanted.
@@ -2208,6 +2265,7 @@ rangeSelect.addEventListener("click", (e) => {
 });
 resetMistakesBtn.addEventListener("click", resetMistakes);
 classPick.addEventListener("change", () => setClass(Number(classPick.value)));
+resetClassBtn.addEventListener("click", resetClassCovered);
 levelSelect.addEventListener("click", (e) => {
   const btn = e.target.closest(".level-btn");
   if (btn) setLevel(btn.dataset.level);
