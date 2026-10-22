@@ -2068,6 +2068,14 @@ lookupForm.addEventListener("submit", (e) => {
   renderLookupResult(lookupInput.value);
 });
 
+// The 楷書 fallback (LXGW WenKai TC) is served in unicode-range slices that
+// load only when a character first appears, so each new card flashed the
+// default font first. Fetch every slice the syllabus needs up front.
+if (document.fonts?.load) {
+  const allHanzi = [...new Set([...CHAR_INDEX.map((e) => e.ch), ..."，。？、"])].join("");
+  document.fonts.load('400 1em "LXGW WenKai TC"', allHanzi).catch(() => {});
+}
+
 updateStats();
 updateMistakeCount();
 setLevel(state.level);
