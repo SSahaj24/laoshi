@@ -1752,15 +1752,25 @@ function refreshMistakesPoolIfActive() {
 // character actually comes from underneath it. Triggers on the entry itself
 // (its `value` prefix) rather than the current range, so a homophone group
 // or combo pair encountered via Mistakes mode still gets its use cases shown.
+function charWords(ch) {
+  const words = WORDS.filter((w) => w.hanzi.length > 1 && w.hanzi.includes(ch)).slice(0, 3);
+  if (words.length) return words;
+  const ex = CHAR_EXAMPLES.get(ch); // digits like 七 only appear in numbers (十七)
+  return ex ? [ex] : [];
+}
+
 function appendUseCases() {
   const value = String(state.current.value);
-  if (!/^(homo|combo|look)-/.test(value)) return;
-  const lines = [...state.current.hanzi]
-    .map((ch) => {
-      const ex = CHAR_EXAMPLES.get(ch);
-      return ex ? `${ch} → ${ex.hanzi} (${ex.pinyinDisplay})` : null;
-    })
-    .filter(Boolean);
+  if (!/^(homo|combo|look|char)-/.test(value)) return;
+  // A lone character (By Class) gets up to three words it appears in.
+  const lines = value.startsWith("char-")
+    ? charWords(state.current.hanzi).map((w) => `${w.hanzi} (${w.pinyinDisplay})`)
+    : [...state.current.hanzi]
+        .map((ch) => {
+          const ex = CHAR_EXAMPLES.get(ch);
+          return ex ? `${ch} → ${ex.hanzi} (${ex.pinyinDisplay})` : null;
+        })
+        .filter(Boolean);
   if (lines.length === 0) return;
   const box = document.createElement("div");
   box.className = "use-cases";
