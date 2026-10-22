@@ -625,6 +625,46 @@ body {
 /* Phone sizing. Must stay last: the base .pinyin-input rule sits further up
    the file, so an earlier media query would lose on source order.
    A 3rem box only fits a few characters at 375px, hiding what's being typed. */
+.class-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  width: 100%;
+}
+
+.class-label {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.class-pick {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.class-pick:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.class-new {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  letter-spacing: 0.05em;
+}
+
 @media (max-width: 480px) {
   /* Stack the button under the input so the answer gets the full card width. */
   .answer-form {

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div class="app">
@@ -19,6 +19,7 @@
     <nav class="range-select" id="rangeSelect">
       <button class="range-btn active" data-range="numbers">Numbers</button>
       <button class="range-btn" data-range="words">Words</button>
+      <button class="range-btn" data-range="classes">By Class</button>
       <button class="range-btn" data-range="sentences">Word Order</button>
       <button class="range-btn" data-range="homophones">Tone Pairs</button>
       <button class="range-btn" data-range="lookalikes">Look-alikes</button>
@@ -54,6 +55,12 @@
           <button type="button" class="level-btn" data-level="easy">Easy</button>
           <button type="button" class="level-btn" data-level="medium">Medium</button>
           <button type="button" class="level-btn" data-level="hard">Hard</button>
+        </div>
+
+        <div class="class-select hidden" id="classSelect">
+          <label class="class-label" for="classPick">Class</label>
+          <select id="classPick" class="class-pick"></select>
+          <p class="class-new" id="classNew" lang="zh-Hant"></p>
         </div>
 
         <div class="sentence-builder" id="sentenceBuilder">
@@ -113,6 +120,8 @@
         <strong>Word Order</strong> tap the words into a correct sentence, like the
         weekly test, with new sentences every round. Hard gives long, two-part
         sentences. Tap a placed word to send it back.
+        <strong>By Class</strong> just one class's new characters and the words
+        they make &mdash; pick the class from the list.
         <strong>Tone Pairs</strong> same syllable, different tones
         (七氣起期 → <code>qi1 qi4 qi3 qi2</code>).
         <strong>Look-alikes</strong> characters that look similar, shown together
@@ -125,6 +134,6 @@
     </footer>
   </div>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>

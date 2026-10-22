@@ -1360,6 +1360,61 @@ function entryFromValue(v) {
 }
 
 // ---------------------------------------------------------------------------
+// By Class: each class session's new recap-grid characters (the grid diff
+// from one PDF to the next), so a single class can be drilled on its own.
+// A class's deck is its new characters plus every word that only became
+// writable with them — 老師 lands in Aug 19, 綠茶 in Aug 22. Sessions that
+// added nothing to the grid (PDF 6, 12, 17) are left out. Append new classes
+// at the end.
+// ---------------------------------------------------------------------------
+
+const CLASSES = [
+  { date: "Aug 19", title: "Fundamentals", chars: "班代老師好你早謝再見有問題嗎沒了還可以不客氣對起關係下課中國台灣我是英美印度" },
+  { date: "Aug 21", title: "Pinyin", chars: "馬一二三四" },
+  { date: "Aug 22", title: "Pinyin", chars: "媽房子的爸這個月小鹿喝綠茶" },
+  { date: "Sep 2", title: "Numbers", chars: "五六七八九十零電話號碼手機日" },
+  { date: "Sep 4", title: "Dates", chars: "生星期" },
+  { date: "Sep 5", title: "今天", chars: "今天昨明陳李華王開文" },
+  { date: "Sep 9", title: "第一課 · 小姐", chars: "叫姓請先姐" },
+  { date: "Sep 11", title: "第一課 · 們", chars: "那本人他們來去回歡迎接" },
+  { date: "Sep 18", title: "第一課 · 烏龍茶", chars: "上什麼咖啡牛奶水紅烏龍" },
+  { date: "Sep 19", title: "第一課 · 要", chars: "喜要" },
+  { date: "Sep 23", title: "第一課 · 國家", chars: "妳您她哪家" },
+  { date: "Sep 25", title: "第一課 · 很", chars: "呢很" },
+  { date: "Sep 30", title: "第二課 · 妹妹", chars: "秋節餅柚烤肉祝快樂第張怡君安同田誠哥弟妹" },
+  { date: "Oct 7", title: "第二課 · 照相", chars: "幾誰進坐看照相" },
+  { date: "Oct 9", title: "第二課 · 好看", chars: "片" },
+  { date: "Oct 14", title: "第二課 · 都", chars: "漂亮多都" },
+  { date: "Oct 16", title: "第二課 · 兩", chars: "兄伯叔阿姨名字書兩" },
+  { date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
+];
+
+const CLASS_OF_CHAR = new Map();
+CLASSES.forEach((c, i) => [...c.chars].forEach((ch) => CLASS_OF_CHAR.has(ch) || CLASS_OF_CHAR.set(ch, i)));
+const unplaced = CHAR_INDEX.filter((e) => !CLASS_OF_CHAR.has(e.ch)).map((e) => e.ch);
+if (unplaced.length) console.error(`By Class: ${unplaced.join("")} is not in any class`);
+
+// One card per character, for characters drilled on their own (班, 代 ...).
+const CHAR_ENTRIES = CHAR_INDEX.map((e) => ({ ...makeEntry([e], `char-${e.ch}`), kind: "char" }));
+const CHAR_ENTRY = new Map(CHAR_ENTRIES.map((e) => [e.hanzi, e]));
+
+// Words taught later than all their characters, pinned to the class that
+// taught them (課本 is all old characters but first came up in PDF 19).
+const WORD_TAUGHT = { 課本: "Oct 7", 可是: "Oct 9", 好看: "Oct 9", 中文: "Oct 16", 姐妹: "Oct 16" };
+const classOfWord = (w) =>
+  Math.max(
+    ...[...w.hanzi].map((ch) => CLASS_OF_CHAR.get(ch) ?? -1),
+    CLASSES.findIndex((c) => c.date === WORD_TAUGHT[w.hanzi]),
+  );
+
+const CLASS_POOLS = CLASSES.map((c, i) => {
+  const words = WORDS.filter((w) => classOfWord(w) === i);
+  const singles = new Set(words.map((w) => w.hanzi));
+  const chars = [...c.chars].filter((ch) => CLASS_OF_CHAR.get(ch) === i && !singles.has(ch)).map((ch) => CHAR_ENTRY.get(ch)).filter(Boolean);
+  return [...chars, ...words];
+});
+
+// ---------------------------------------------------------------------------
 // Game state
 // ---------------------------------------------------------------------------
 
@@ -1376,7 +1431,7 @@ const RANGES = {
 // mistake logged in any mode can be looked back up regardless of which pool
 // it originally came from. "mistakes" itself isn't a fixed RANGES entry —
 // it's rebuilt from state.mistakes each time (see mistakesPool()).
-const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS, ...LOOKALIKES];
+const ALL_ENTRIES = [...ALL_NUMBERS, ...WORDS, ...SENTENCES, ...HOMOPHONE_GROUPS, ...COMBO_PAIRS, ...LOOKALIKES, ...CHAR_ENTRIES];
 const ENTRY_BY_VALUE = new Map(ALL_ENTRIES.map((e) => [e.value, e]));
 
 function mistakesPool() {
@@ -1386,6 +1441,17 @@ function mistakesPool() {
 const STORAGE_KEY = "laoshi_numbers_best_streak";
 const MISTAKES_KEY = "laoshi_mistakes";
 const LEVEL_KEY = "laoshi_sentence_level";
+const CLASS_KEY = "laoshi_class";
+
+// Defaults to the latest class — usually the one being studied.
+function loadClass() {
+  try {
+    const v = parseInt(localStorage.getItem(CLASS_KEY), 10);
+    return v >= 0 && v < CLASSES.length ? v : CLASSES.length - 1;
+  } catch {
+    return CLASSES.length - 1;
+  }
+}
 
 function loadLevel() {
   try {
@@ -1426,6 +1492,7 @@ const state = {
   best: loadBest(),
   mistakes: loadMistakes(), // Set of `value`s answered wrong/skipped, persisted
   level: loadLevel(), // Word Order difficulty
+  classIndex: loadClass(), // By Class session
 };
 
 // Fisher-Yates shuffle (does not mutate the input).
@@ -1461,6 +1528,9 @@ function saveBest(val) {
 const card = document.querySelector(".card");
 const hanziDisplay = document.getElementById("hanziDisplay");
 const levelSelect = document.getElementById("levelSelect");
+const classSelect = document.getElementById("classSelect");
+const classPick = document.getElementById("classPick");
+const classNew = document.getElementById("classNew");
 const sentenceBuilder = document.getElementById("sentenceBuilder");
 const sentenceAnswer = document.getElementById("sentenceAnswer");
 const sentenceBank = document.getElementById("sentenceBank");
@@ -1839,15 +1909,38 @@ function skipOrReveal() {
 
 function setRange(range) {
   state.range = range;
-  state.pool = range === "mistakes" ? mistakesPool() : RANGES[range];
+  state.pool = range === "mistakes" ? mistakesPool() : range === "classes" ? CLASS_POOLS[state.classIndex] : RANGES[range];
   state.deck = []; // start a fresh shuffled lap for the new pool
   [...rangeSelect.children].forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.range === range);
   });
   // Only on the Word Order tab — sentences in My Mistakes keep whatever level they were.
   levelSelect.classList.toggle("hidden", range !== "sentences");
+  classSelect.classList.toggle("hidden", range !== "classes");
   pickNext();
 }
+
+function setClass(i) {
+  state.classIndex = i;
+  try {
+    localStorage.setItem(CLASS_KEY, String(i));
+  } catch {
+    /* ignore (e.g. storage disabled) */
+  }
+  classPick.value = String(i);
+  classNew.textContent = `New: ${CLASSES[i].chars.split("").join(" ")}`;
+  if (state.range === "classes") {
+    state.pool = CLASS_POOLS[i];
+    state.deck = [];
+    pickNext();
+  }
+}
+
+// Newest first, since the latest class is the one most often wanted.
+classPick.innerHTML = CLASSES.map((c, i) => ({ c, i }))
+  .reverse()
+  .map(({ c, i }) => `<option value="${i}">${c.date} · ${escapeHtml(c.title)} (${CLASS_POOLS[i].length})</option>`)
+  .join("");
 
 function setLevel(level) {
   state.level = level;
@@ -1955,6 +2048,7 @@ rangeSelect.addEventListener("click", (e) => {
   if (btn) setRange(btn.dataset.range);
 });
 resetMistakesBtn.addEventListener("click", resetMistakes);
+classPick.addEventListener("change", () => setClass(Number(classPick.value)));
 levelSelect.addEventListener("click", (e) => {
   const btn = e.target.closest(".level-btn");
   if (btn) setLevel(btn.dataset.level);
@@ -1967,4 +2061,5 @@ lookupForm.addEventListener("submit", (e) => {
 updateStats();
 updateMistakeCount();
 setLevel(state.level);
+setClass(state.classIndex);
 pickNext();
