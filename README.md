@@ -7,11 +7,14 @@ where the tone mark sits — for the character shown.
 
 ## Modes
 
-- **0–9 / 10–99 / 0–99** — numbers
+- **Numbers** — 0–99
 - **Words** — vocabulary phrases
-- **Homophones** — characters sharing a syllable but differing in tone, shown together
-- **Combo** — two random characters, real word or not
-- **Mistakes** — everything missed or skipped; answer it right and it drops off
+- **By Class** — one class session's new characters and the words they make
+- **Word Order** — tap the words into a correct sentence, like the weekly test (Easy / Medium / Hard)
+- **Tone Pairs** — characters sharing a syllable but differing in tone, shown together
+- **Look-alikes** — characters that look similar, shown together
+- **Random Mix** — two random characters, real word or not
+- **My Mistakes** — everything missed or skipped, with memory hints; answer it right and it drops off
 
 ## Typing tones
 
@@ -34,3 +37,7 @@ No build step — open `index.html` in a browser.
 
 Vocabulary comes from a Traditional Chinese course's weekly recap grids. The
 course slides themselves are not in this repo.
+
+## Adding a new class
+
+Follow the checklist in [UPDATING.md](UPDATING.md) every time a new class PDF is added.
