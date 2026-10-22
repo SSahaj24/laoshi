@@ -54,14 +54,15 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-22), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-23), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
 // entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
 // with PDF 17, and Lesson 2's 秋/節/餅/柚/烤/肉/祝/快/樂/第/張/怡/君/安/同/
 // 田/誠/哥/弟/妹 with PDF 18, 幾/誰/進/坐/看/照/相 with PDF 19 and 片 with
 // PDF 20 (past the divider, but the weekly test runs "till 片"), 漂/亮/多/都
-// with PDF 21, and 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩").
+// with PDF 21, 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩"), and
+// 朋/友 plus the next grid page's 男/女/次/母 with PDF 23.
 // Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
@@ -210,6 +211,16 @@ const WORD_DEFS = [
   [{ ch: "兩", accented: "liǎng" }, { ch: "本", accented: "běn" }, { ch: "書", accented: "shū" }], // 兩本書 two books
   [{ ch: "兩", accented: "liǎng" }, { ch: "張", accented: "zhāng" }, { ch: "照", accented: "zhào" }, { ch: "片", accented: "piàn" }], // 兩張照片 two photos
   [{ ch: "中", accented: "zhōng" }, { ch: "文", accented: "wén" }], // 中文 Chinese (language)
+  // PDF 23
+  [{ ch: "朋", accented: "péng" }, { ch: "友", accented: "yǒu" }], // 朋友 friend
+  [{ ch: "男", accented: "nán" }], // 男 male
+  [{ ch: "女", accented: "nǚ" }], // 女 female
+  [{ ch: "男", accented: "nán" }, { ch: "朋", accented: "péng" }, { ch: "友", accented: "yǒu" }], // 男朋友 boyfriend
+  [{ ch: "女", accented: "nǚ" }, { ch: "朋", accented: "péng" }, { ch: "友", accented: "yǒu" }], // 女朋友 girlfriend
+  [{ ch: "次", accented: "cì" }], // 次 time (measure word for actions)
+  [{ ch: "一", accented: "yí" }, { ch: "次", accented: "cì" }], // 一次 once
+  [{ ch: "再", accented: "zài" }, { ch: "看", accented: "kàn" }, { ch: "一", accented: "yí" }, { ch: "次", accented: "cì" }], // 再看一次 look once more
+  [{ ch: "伯", accented: "bó" }, { ch: "母", accented: "mǔ" }], // 伯母 auntie (polite, a friend's mother)
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -423,6 +434,13 @@ const LOOKALIKE_DEFS = [
   { chars: "漂沒灣", note: "All have 氵 (water) on the left." },
   { chars: "字客家安", note: "All have 宀 (roof) on top — 字 is 子 under it." },
   { chars: "姨好姐姓奶妹", note: "All have 女 (woman) on the left." },
+  // PDF 23
+  { chars: "朋月", note: "朋 is two 月 side by side." },
+  { chars: "友有", note: "Same top — 友 has 又 underneath, 有 has 月." },
+  { chars: "友叔", note: "Both contain 又." },
+  { chars: "男田", note: "男 is 田 (field) over 力 (strength)." },
+  { chars: "女她好", note: "女 on its own, then as the left side." },
+  { chars: "次歡", note: "Both have 欠 on the right." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -644,6 +662,51 @@ const SENTENCE_DEFS = [
   { chunks: ["你", "有", "沒有", "兄弟姐妹"], end: "？", gloss: "Do you have any brothers or sisters?" },
   { chunks: ["我家", "有", "五個", "人，", "我", "有", "兩個", "妹妹"], end: "。", gloss: "There are five of us in my family — I have two younger sisters." },
   { chunks: ["我", "有", "兩張", "奶奶的", "照片"], end: "。", gloss: "I have two photos of Grandma." },
+  // PDF 23: 誰 questions, the self-introduction, the 個 / 的 / 張 and 的 drills.
+  { chunks: ["哪一張", "照片", "漂亮"], end: "？", gloss: "Which photo is pretty?" },
+  {
+    chunks: ["他們", "是", "誰"],
+    alts: [["誰", "是", "他們"]],
+    end: "？",
+    gloss: "Who are they?",
+  },
+  { chunks: ["誰", "有", "很多", "書"], end: "？", gloss: "Who has a lot of books?" },
+  { chunks: ["誰", "不", "喜歡", "看", "書"], end: "？", gloss: "Who doesn't like reading?" },
+  { chunks: ["誰的", "爸爸", "喜歡", "照相"], end: "？", gloss: "Whose dad likes taking photos?" },
+  { chunks: ["誰", "有", "好喝的", "茶"], end: "？", gloss: "Who has good tea?" },
+  { chunks: ["我、我爸爸", "都", "是", "美國人"], end: "。", gloss: "My dad and I are both American." },
+  { chunks: ["我", "沒有", "兄弟姐妹"], end: "。", gloss: "I don't have any brothers or sisters." },
+  { chunks: ["我爸爸媽媽", "都", "喜歡", "喝茶、看書"], end: "。", gloss: "My mom and dad both like drinking tea and reading." },
+  { chunks: ["我家", "有", "很多", "茶，", "有", "很多", "書"], end: "。", gloss: "My home has lots of tea and lots of books." },
+  { chunks: ["我家", "有", "很多", "很漂亮的", "照片"], end: "。", gloss: "My home has lots of really pretty photos." },
+  { chunks: ["王先生的", "老師", "很", "漂亮"], end: "。", gloss: "Mr. Wang's teacher is very pretty." },
+  { chunks: ["我", "有", "很多", "好喝的", "茶"], end: "。", gloss: "I have lots of good tea." },
+  { chunks: ["他", "有", "三個", "弟弟"], end: "。", gloss: "He has three younger brothers." },
+  { chunks: ["李阿姨家", "有", "六個", "人"], end: "。", gloss: "There are six people in Auntie Li's family." },
+  { chunks: ["陳小姐", "有", "五張", "照片"], end: "。", gloss: "Miss Chen has five photos." },
+  {
+    chunks: ["他的", "名字", "是", "馬安同"],
+    alts: [["馬安同", "是", "他的", "名字"]],
+    end: "。",
+    gloss: "His name is Ma Antong.",
+  },
+  { chunks: ["陳先生的", "老師", "姓", "李"], end: "。", gloss: "Mr. Chen's teacher's surname is Li." },
+  { chunks: ["你爸爸", "來", "不來"], end: "？", gloss: "Is your dad coming?" },
+  { chunks: ["你們家", "很", "漂亮", "嗎"], end: "？", gloss: "Is your home very pretty?" },
+  { chunks: ["伯母，", "您", "好"], end: "。", gloss: "Hello, Auntie." },
+  { chunks: ["我", "有", "很多", "好", "兄弟"], end: "。", gloss: "I have lots of good brothers." },
+  {
+    chunks: ["星期天", "我", "要", "去", "伯伯家"],
+    alts: [["我", "星期天", "要", "去", "伯伯家"]],
+    end: "。",
+    gloss: "On Sunday I'm going to my uncle's home.",
+  },
+  { chunks: ["你的", "阿姨", "喜歡", "喝", "什麼"], end: "？", gloss: "What does your aunt like to drink?" },
+  { chunks: ["你", "喜歡", "看", "書", "嗎"], end: "？", gloss: "Do you like reading?" },
+  { chunks: ["我", "有", "很多", "中文", "書"], end: "。", gloss: "I have lots of Chinese books." },
+  { chunks: ["我們班", "有", "兩個", "老師"], end: "。", gloss: "There are two teachers in our class." },
+  { chunks: ["我哥哥", "有", "兩張", "你的", "照片"], end: "。", gloss: "My older brother has two photos of you." },
+  { chunks: ["請", "你", "再", "看", "一次"], end: "。", gloss: "Please look at it once more." },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -657,9 +720,9 @@ function sentencePinyin(chunks, end) {
   const syl = chars.map((ch) => CHAR_PINYIN.get(ch));
   chars.forEach((ch, i) => {
     if (ch === "不") syl[i] = FOURTH_TONE_RE.test(syl[i + 1] || "") ? "bú" : "bù";
-    // 一 before a measure word: yí before 個 (underlyingly gè), yì before
-    // 本 / 張. Elsewhere (誠一, 星期一, 第一) it stays yī.
-    if (ch === "一" && "個本張".includes(chars[i + 1] || "")) syl[i] = chars[i + 1] === "個" ? "yí" : "yì";
+    // 一 before a measure word: yí before a 4th tone (次, and 個, underlyingly
+    // gè), yì before 本 / 張. Elsewhere (誠一, 星期一, 第一) it stays yī.
+    if (ch === "一" && "個本張次".includes(chars[i + 1] || "")) syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
   });
   let k = 0;
   const words = chunks.map((c) => {
@@ -808,7 +871,11 @@ for (const p of LEX.person.filter((w) => w.pro)) {
     { zh: "伯伯", en: "uncle" },
     { zh: "叔叔", en: "uncle" },
     { zh: "阿姨", en: "aunt" },
+    { zh: "朋友", en: "friend" },
+    { zh: "男朋友", en: "boyfriend", single: true },
+    { zh: "女朋友", en: "girlfriend", single: true },
   ]) {
+    if (role.single && p.plural) continue; // 他們的男朋友 reads oddly
     LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
   }
 }
