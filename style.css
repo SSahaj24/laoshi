@@ -370,6 +370,13 @@ body {
   margin-bottom: 6px;
 }
 
+.hint-char {
+  font-family: var(--font-hanzi);
+  font-size: 1.25em;
+  color: var(--ink);
+  margin-right: 4px;
+}
+
 .use-cases-title {
   font-weight: 600;
   text-transform: uppercase;

@@ -1752,6 +1752,153 @@ function refreshMistakesPoolIfActive() {
 // character actually comes from underneath it. Triggers on the entry itself
 // (its `value` prefix) rather than the current range, so a homophone group
 // or combo pair encountered via Mistakes mode still gets its use cases shown.
+// Memory hints, shown in My Mistakes. Most characters are a meaning part
+// (女 woman, 氵 water, 訁 speech ...) plus a part that gives the sound
+// (媽 = 女 + 馬 mǎ); others are pictures. Characters with no honest hint
+// are left out rather than given a made-up story.
+const HINTS = {
+  零: "雨 (rain) on top; 令 (lìng) gives the sound líng.",
+  一: "One stroke.",
+  二: "Two strokes.",
+  三: "Three strokes.",
+  四: "A box (囗) with two legs inside.",
+  八: "Two strokes parting — 八 also means ‘split’.",
+  十: "A cross.",
+  班: "Two 王 (jade) split by 刂 (knife) — sorting into groups, a class.",
+  代: "亻 (person) — someone standing in for another, like the 班代.",
+  老: "An old person bent over a walking stick.",
+  你: "亻 (person) — ‘you’ is a person.",
+  好: "女 (woman) + 子 (child) = good.",
+  早: "日 (sun) just over the horizon = early.",
+  謝: "訁 (speech) — thanks is something you say.",
+  見: "目 (eye) on legs — a walking eye: to see.",
+  有: "A hand holding 月 (meat) = to have.",
+  問: "口 (mouth) at 門 (door, mén) — asking at the door; 門 gives the -en: wèn.",
+  題: "頁 (page/head) — the topic at the top of the page.",
+  嗎: "口 (mouth) + 馬 (mǎ): a spoken ‘ma’.",
+  沒: "氵 (water) — sunk under water, gone: méi, not have.",
+  還: "辶 (walk) — walking back.",
+  客: "宀 (roof) — someone under your roof is a guest.",
+  氣: "气 (steam) over 米 (rice) — steam from cooking rice: air.",
+  起: "走 (walk) — get up and go: to rise.",
+  關: "門 (door) — closing the door.",
+  係: "亻 + 系 (xì), which gives the sound xi.",
+  上: "The stroke points up from the line.",
+  下: "The stroke hangs down from the line.",
+  課: "訁 (speech) — a lesson is spoken.",
+  中: "A line through the middle of a box.",
+  國: "囗 (border) around it — a country inside its borders.",
+  灣: "氵 (water) + 彎 (wān, a bend) — a bend of water, a bay: wān.",
+  馬: "A horse: mane at the top, four legs (灬) at the bottom.",
+  媽: "女 (woman) + 馬 (mǎ) gives the sound: mā.",
+  房: "戶 (door) + 方 (fāng) gives the sound: fáng.",
+  子: "A baby with its arms out.",
+  爸: "父 (father) on top + 巴 (bā) gives the sound: bà.",
+  個: "亻 (person) — the measure word for people.",
+  月: "A crescent moon.",
+  小: "Something split into tiny bits.",
+  鹿: "A deer: antlers on top, legs at the bottom.",
+  喝: "口 (mouth) — drinking goes through the mouth.",
+  綠: "糸 (silk) — dyed thread; the right side 彔 (lù) gives the sound: lǜ.",
+  茶: "艹 (grass) on top, 木 (tree) below — leaves from a tea bush.",
+  電: "雨 (rain) on top — lightning in a storm.",
+  話: "訁 (speech) + 舌 (tongue) = words.",
+  碼: "石 (stone) + 馬 (mǎ) gives the sound: mǎ.",
+  號: "号 (to call out) + 虎 (tiger) — a tiger's roar.",
+  手: "A hand with its fingers.",
+  機: "木 (wood) + 幾 (jǐ) gives the sound: jī — old machines were wooden.",
+  日: "The sun.",
+  生: "A sprout coming up out of the ground.",
+  星: "日 (light) over 生 (shēng) gives the sound: xīng.",
+  期: "月 (moon) marks time; 其 (qí) gives the sound: qí.",
+  天: "大 (a big person) with a line above the head — the sky.",
+  昨: "日 (day) — the day before.",
+  明: "日 (sun) + 月 (moon) = bright.",
+  美: "羊 (sheep) over 大 (big) — a big sheep was a beautiful thing.",
+  李: "木 (tree) + 子 — the plum tree.",
+  王: "三 joined by one line — the king links heaven, earth and people.",
+  開: "門 (door) with two hands inside opening it.",
+  叫: "口 (mouth) — to call out.",
+  姓: "女 (woman) + 生 (shēng, birth): xìng — family names came from the mother.",
+  請: "訁 (speech) + 青 (qīng) gives the sound: qǐng.",
+  姐: "女 (woman) + 且 (qiě) gives the sound: jiě.",
+  哪: "口 (mouth) + 那 (nà): asking ‘which?’ — nǎ.",
+  本: "木 (tree) with a mark at the root — the base.",
+  英: "艹 (grass) + 央 (yāng) gives the sound: yīng.",
+  人: "A person walking.",
+  們: "亻 (people) + 門 (mén) gives the sound: men.",
+  他: "亻 (person) — he.",
+  她: "女 (woman) — she.",
+  妳: "女 (woman) — ‘you’ to a woman. Same sound as 你.",
+  您: "你 over 心 (heart) — ‘you’ said with respect.",
+  回: "A box inside a box — going round and coming back.",
+  歡: "欠 (open mouth) — opening your mouth with joy.",
+  迎: "辶 (walk) — walking out to meet someone.",
+  接: "扌 (hand) — receiving with your hand.",
+  什: "亻 + 十 (shí) gives the sound: shén.",
+  咖: "口 + 加 (jiā) — 口 marks a sound borrowed from another language: kā.",
+  啡: "口 + 非 (fēi) gives the sound: fēi.",
+  牛: "An ox head with horns.",
+  奶: "女 (woman) + 乃 (nǎi) gives the sound: nǎi.",
+  水: "Water flowing.",
+  紅: "糸 (silk) — dyed thread; 工 (gōng) gives the -ong: hóng.",
+  烏: "鳥 (bird) missing one stroke — a crow is so black you can't see its eye.",
+  喜: "A drum over 口 (mouth) — music and singing: joy.",
+  家: "宀 (roof) over 豕 (pig) — a pig under the roof is home.",
+  呢: "口 (mouth) + 尼 (ní) gives the sound: ne.",
+  很: "艮 (gèn) gives the -en: hěn.",
+  秋: "禾 (grain) + 火 (fire) — harvest time, autumn.",
+  節: "⺮ (bamboo) — bamboo grows in joints; a festival is a joint in the year.",
+  餅: "飠 (food) + 并 (bìng) gives the sound: bǐng.",
+  柚: "木 (tree) + 由 (yóu) gives the sound: yòu.",
+  烤: "火 (fire) + 考 (kǎo) gives the sound: kǎo.",
+  肉: "A cut of meat with its marbling.",
+  快: "忄 (heart) + 夬 (guài) gives the sound: kuài.",
+  祝: "礻 (altar) + 兄 — praying at the altar: to wish.",
+  第: "⺮ (bamboo) + 弟 (dì) gives the sound: dì.",
+  張: "弓 (bow) — drawing a bow open.",
+  怡: "忄 (heart) — a happy heart.",
+  安: "宀 (roof) + 女 (woman) — safe under the roof: peace.",
+  田: "A field split into four plots.",
+  誠: "訁 (speech) + 成 (chéng) gives the sound: chéng — sincere words.",
+  哥: "可 (kě) stacked twice: gē.",
+  妹: "女 (woman) + 未 (wèi) gives the -ei: mèi.",
+  誰: "訁 (speech) — asking ‘who?’.",
+  進: "辶 (walk) + 隹 (bird) — birds only fly forward: to go in.",
+  坐: "Two 人 sitting on 土 (the ground).",
+  看: "手 (hand) over 目 (eye) — shading your eyes to look.",
+  照: "日 (sun) + 灬 (fire) — light shining.",
+  相: "木 (tree) + 目 (eye) — an eye looking at a tree.",
+  片: "Half of 木 — a split piece of wood: a slice.",
+  漂: "氵 (water) + 票 (piào) gives the sound: piào.",
+  多: "Two 夕 (evenings) stacked — many.",
+  都: "阝 (city) — 都 also means capital city.",
+  兄: "口 (mouth) on 儿 (legs) — the one who speaks for the kids: older brother.",
+  伯: "亻 (person) + 白 (bái) gives the sound: bó.",
+  阿: "阝 + 可 — a friendly ‘ā’ before names: 阿姨.",
+  姨: "女 (woman) + 夷 (yí) gives the sound: yí.",
+  名: "夕 (evening) + 口 (mouth) — in the dark you call out your name.",
+  字: "宀 (roof) + 子 (child) — a child at home learning to write.",
+  書: "聿 (a hand holding a brush) on top — writing: a book.",
+  兩: "Two 入 inside one frame: two.",
+  朋: "Two 月 side by side — two friends together.",
+  友: "Two hands (𠂇 and 又) — hands joined: a friend.",
+  男: "田 (field) + 力 (strength) — the one working the field: male.",
+  女: "A woman kneeling. It's the 女 on the left of 媽 姐 妹 她 妳 奶 姓 姨 好.",
+  母: "女 with two dots — a mother.",
+};
+
+// In My Mistakes, add a memory hint for each character in the answer.
+function appendHints() {
+  if (state.range !== "mistakes" || isSentence(state.current)) return;
+  const lines = [...new Set(state.current.hanzi)].filter((ch) => HINTS[ch]).map((ch) => `<div><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`);
+  if (lines.length === 0) return;
+  const box = document.createElement("div");
+  box.className = "use-cases hints";
+  box.innerHTML = `<div class="use-cases-title">Remember:</div>` + lines.join("");
+  feedback.appendChild(box);
+}
+
 function charWords(ch) {
   const words = WORDS.filter((w) => w.hanzi.length > 1 && w.hanzi.includes(ch)).slice(0, 3);
   if (words.length) return words;
@@ -1825,6 +1972,7 @@ function showFeedback(isCorrect) {
     feedback.innerHTML = `Not quite — it's ${answer}`;
   }
   appendUseCases();
+  appendHints();
 }
 
 // After grading, the answer stays visible and the input stays live so the
@@ -1905,6 +2053,7 @@ function skipOrReveal() {
   feedback.className = "feedback wrong";
   feedback.innerHTML = `Skipped — it's ${answerHtml(state.current)}`;
   appendUseCases();
+  appendHints();
   updateStats();
   nextBtn.classList.remove("hidden");
   if (isSentence(state.current)) {
