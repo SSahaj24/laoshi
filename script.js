@@ -1364,29 +1364,29 @@ function entryFromValue(v) {
 // from one PDF to the next), so a single class can be drilled on its own.
 // A class's deck is its new characters plus every word that only became
 // writable with them — 老師 lands in Aug 19, 綠茶 in Aug 22. Sessions that
-// added nothing to the grid (PDF 6, 12, 17) are left out. Append new classes
-// at the end.
+// added nothing to the grid (PDF 6, 12, 17) are left out. `pdf` is the
+// class_material file number. Append new classes at the end.
 // ---------------------------------------------------------------------------
 
 const CLASSES = [
-  { date: "Aug 19", title: "Fundamentals", chars: "班代老師好你早謝再見有問題嗎沒了還可以不客氣對起關係下課中國台灣我是英美印度" },
-  { date: "Aug 21", title: "Pinyin", chars: "馬一二三四" },
-  { date: "Aug 22", title: "Pinyin", chars: "媽房子的爸這個月小鹿喝綠茶" },
-  { date: "Sep 2", title: "Numbers", chars: "五六七八九十零電話號碼手機日" },
-  { date: "Sep 4", title: "Dates", chars: "生星期" },
-  { date: "Sep 5", title: "今天", chars: "今天昨明陳李華王開文" },
-  { date: "Sep 9", title: "第一課 · 小姐", chars: "叫姓請先姐" },
-  { date: "Sep 11", title: "第一課 · 們", chars: "那本人他們來去回歡迎接" },
-  { date: "Sep 18", title: "第一課 · 烏龍茶", chars: "上什麼咖啡牛奶水紅烏龍" },
-  { date: "Sep 19", title: "第一課 · 要", chars: "喜要" },
-  { date: "Sep 23", title: "第一課 · 國家", chars: "妳您她哪家" },
-  { date: "Sep 25", title: "第一課 · 很", chars: "呢很" },
-  { date: "Sep 30", title: "第二課 · 妹妹", chars: "秋節餅柚烤肉祝快樂第張怡君安同田誠哥弟妹" },
-  { date: "Oct 7", title: "第二課 · 照相", chars: "幾誰進坐看照相" },
-  { date: "Oct 9", title: "第二課 · 好看", chars: "片" },
-  { date: "Oct 14", title: "第二課 · 都", chars: "漂亮多都" },
-  { date: "Oct 16", title: "第二課 · 兩", chars: "兄伯叔阿姨名字書兩" },
-  { date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
+  { pdf: 3, date: "Aug 19", title: "Fundamentals", chars: "班代老師好你早謝再見有問題嗎沒了還可以不客氣對起關係下課中國台灣我是英美印度" },
+  { pdf: 4, date: "Aug 21", title: "Pinyin", chars: "馬一二三四" },
+  { pdf: 5, date: "Aug 22", title: "Pinyin", chars: "媽房子的爸這個月小鹿喝綠茶" },
+  { pdf: 7, date: "Sep 2", title: "Numbers", chars: "五六七八九十零電話號碼手機日" },
+  { pdf: 8, date: "Sep 4", title: "Dates", chars: "生星期" },
+  { pdf: 9, date: "Sep 5", title: "今天", chars: "今天昨明陳李華王開文" },
+  { pdf: 10, date: "Sep 9", title: "第一課 · 小姐", chars: "叫姓請先姐" },
+  { pdf: 11, date: "Sep 11", title: "第一課 · 們", chars: "那本人他們來去回歡迎接" },
+  { pdf: 13, date: "Sep 18", title: "第一課 · 烏龍茶", chars: "上什麼咖啡牛奶水紅烏龍" },
+  { pdf: 14, date: "Sep 19", title: "第一課 · 要", chars: "喜要" },
+  { pdf: 15, date: "Sep 23", title: "第一課 · 國家", chars: "妳您她哪家" },
+  { pdf: 16, date: "Sep 25", title: "第一課 · 很", chars: "呢很" },
+  { pdf: 18, date: "Sep 30", title: "第二課 · 妹妹", chars: "秋節餅柚烤肉祝快樂第張怡君安同田誠哥弟妹" },
+  { pdf: 19, date: "Oct 7", title: "第二課 · 照相", chars: "幾誰進坐看照相" },
+  { pdf: 20, date: "Oct 9", title: "第二課 · 好看", chars: "片" },
+  { pdf: 21, date: "Oct 14", title: "第二課 · 都", chars: "漂亮多都" },
+  { pdf: 22, date: "Oct 16", title: "第二課 · 兩", chars: "兄伯叔阿姨名字書兩" },
+  { pdf: 23, date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
 ];
 
 const CLASS_OF_CHAR = new Map();
@@ -1939,7 +1939,7 @@ function setClass(i) {
 // Newest first, since the latest class is the one most often wanted.
 classPick.innerHTML = CLASSES.map((c, i) => ({ c, i }))
   .reverse()
-  .map(({ c, i }) => `<option value="${i}">${c.date} · ${escapeHtml(c.title)} (${CLASS_POOLS[i].length})</option>`)
+  .map(({ c, i }) => `<option value="${i}">PDF ${c.pdf} · ${c.date} · ${escapeHtml(c.title)} (${CLASS_POOLS[i].length})</option>`)
   .join("");
 
 function setLevel(level) {
