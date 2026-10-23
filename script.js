@@ -1911,9 +1911,10 @@ const HINTS = {
   母: "女 with two dots — a mother.",
 };
 
-// In My Mistakes, add a memory hint for each character in the answer.
-function appendHints() {
-  if (state.range !== "mistakes" || isSentence(state.current)) return;
+// A memory hint for each character in the answer: after any miss, and
+// always in My Mistakes.
+function appendHints(missed) {
+  if ((!missed && state.range !== "mistakes") || isSentence(state.current)) return;
   const lines = [...new Set(state.current.hanzi)].filter((ch) => HINTS[ch]).map((ch) => `<div><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`);
   if (lines.length === 0) return;
   const box = document.createElement("div");
@@ -1995,7 +1996,7 @@ function showFeedback(isCorrect) {
     feedback.innerHTML = `Not quite — it's ${answer}`;
   }
   appendUseCases();
-  appendHints();
+  appendHints(!isCorrect);
 }
 
 // After grading, the answer stays visible and the input stays live so the
@@ -2077,7 +2078,7 @@ function skipOrReveal() {
   feedback.className = "feedback wrong";
   feedback.innerHTML = `Skipped — it's ${answerHtml(state.current)}`;
   appendUseCases();
-  appendHints();
+  appendHints(true);
   updateStats();
   nextBtn.classList.remove("hidden");
   if (isSentence(state.current)) {
