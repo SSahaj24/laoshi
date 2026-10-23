@@ -519,6 +519,11 @@ body {
   gap: 8px;
 }
 
+/* Hint sits on the left; Skip and Next stay together on the right. */
+#hintBtn {
+  margin-right: auto;
+}
+
 .hidden {
   display: none !important;
 }

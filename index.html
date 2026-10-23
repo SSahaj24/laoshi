@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
   <div class="app">
@@ -87,6 +87,7 @@
         <div class="feedback" id="feedback" aria-live="polite"></div>
 
         <div class="actions">
+          <button type="button" class="btn btn-ghost hidden" id="hintBtn">💡 Hint</button>
           <button class="btn btn-ghost" id="skipBtn">Skip / Show answer</button>
           <button class="btn btn-primary hidden" id="nextBtn">Next →</button>
         </div>
@@ -132,12 +133,12 @@
         (開關問們 all contain 門), in a new order each time.
         <strong>Random Mix</strong> two random characters, real word or not.
         <strong>My Mistakes</strong> anything you got wrong or skipped &mdash; answer it
-        correctly and it drops off. Tone Pairs, Look-alikes and Random Mix also show a
+        correctly and it drops off. Stuck? Tap 💡 Hint first &mdash; but a card answered with a hint stays on the list. Tone Pairs, Look-alikes and Random Mix also show a
         real word each character appears in.
       </p>
     </footer>
   </div>
 
-  <script src="script.js?v=13"></script>
+  <script src="script.js?v=14"></script>
 </body>
 </html>

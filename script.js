@@ -1561,6 +1561,7 @@ const answerForm = document.getElementById("answerForm");
 const pinyinInput = document.getElementById("pinyinInput");
 const submitBtn = document.getElementById("submitBtn");
 const skipBtn = document.getElementById("skipBtn");
+const hintBtn = document.getElementById("hintBtn");
 const nextBtn = document.getElementById("nextBtn");
 const feedback = document.getElementById("feedback");
 const scoreValue = document.getElementById("scoreValue");
@@ -1652,6 +1653,8 @@ function pickNext() {
   feedback.className = "feedback";
   nextBtn.classList.add("hidden");
   skipBtn.classList.remove("hidden");
+  state.hintUsed = false;
+  hintBtn.classList.toggle("hidden", !canHint());
   submitBtn.disabled = false;
   pinyinInput.disabled = false;
   if (!sentence) pinyinInput.focus();
@@ -1720,7 +1723,7 @@ function submitSentence() {
     if (!complete) return;
     const isCorrect = state.current.accepted.includes(built);
     showPracticeCheck(isCorrect);
-    if (isCorrect) clearMistake(state.current.value);
+    if (isCorrect && !state.hintUsed) clearMistake(state.current.value);
     state.gradedValue = built;
     return;
   }
@@ -1747,6 +1750,7 @@ function showEmptyMistakes() {
   submitBtn.disabled = true;
   skipBtn.classList.add("hidden");
   nextBtn.classList.add("hidden");
+  hintBtn.classList.add("hidden");
   state.gradedValue = null;
 }
 
@@ -1923,6 +1927,33 @@ function appendHints(missed) {
   feedback.appendChild(box);
 }
 
+// My Mistakes can ask for the hint before answering. The answer's own pinyin
+// is blanked out (媽: "…gives the sound: ?") so the hint helps recall rather
+// than handing over the answer. Getting it right after a hint keeps the card
+// in My Mistakes, so it has to be recalled unaided once to drop off.
+function canHint() {
+  return state.range === "mistakes" && !isSentence(state.current) && [...state.current.hanzi].some((ch) => HINTS[ch]);
+}
+
+function maskAnswer(text, entry) {
+  return entry.syllableAccents.reduce(
+    (t, syl) => t.replace(new RegExp(`(?<!\\p{L})${syl}(?!\\p{L})`, "gu"), "?"),
+    text,
+  );
+}
+
+function showHint() {
+  if (state.answered || !canHint()) return;
+  state.hintUsed = true;
+  hintBtn.classList.add("hidden");
+  const lines = [...new Set(state.current.hanzi)]
+    .filter((ch) => HINTS[ch])
+    .map((ch) => `<div><span class="hint-char">${ch}</span> ${maskAnswer(HINTS[ch], state.current)}</div>`);
+  feedback.className = "feedback";
+  feedback.innerHTML = `<div class="use-cases hints"><div class="use-cases-title">Hint:</div>${lines.join("")}</div>`;
+  pinyinInput.focus();
+}
+
 function charWords(ch) {
   const words = WORDS.filter((w) => w.hanzi.length > 1 && w.hanzi.includes(ch)).slice(0, 3);
   if (words.length) return words;
@@ -2022,12 +2053,13 @@ function gradeAnswer(isCorrect) {
       state.best = state.streak;
       saveBest(state.best);
     }
-    clearMistake(state.current.value);
+    if (!state.hintUsed) clearMistake(state.current.value);
     markCovered(state.current);
   } else {
     state.streak = 0;
     addMistake(state.current.value);
   }
+  hintBtn.classList.add("hidden");
   revealLookupPanel();
   showFeedback(isCorrect);
   updateStats();
@@ -2054,7 +2086,7 @@ function submitAnswer(e) {
     const userSyllables = parseUserInput(pinyinInput.value);
     const isCorrect = syllablesMatch(userSyllables, state.current.syllableAccents);
     showPracticeCheck(isCorrect);
-    if (isCorrect) clearMistake(state.current.value);
+    if (isCorrect && !state.hintUsed) clearMistake(state.current.value);
     pinyinInput.select();
     state.gradedValue = pinyinInput.value;
     return;
@@ -2074,6 +2106,7 @@ function skipOrReveal() {
   state.answered = true;
   state.total += 1;
   state.streak = 0;
+  hintBtn.classList.add("hidden");
   addMistake(state.current.value);
   feedback.className = "feedback wrong";
   feedback.innerHTML = `Skipped — it's ${answerHtml(state.current)}`;
@@ -2264,6 +2297,7 @@ pinyinInput.addEventListener("input", liveTransformInput);
 lookupInput.addEventListener("input", liveTransformInput);
 answerForm.addEventListener("submit", submitAnswer);
 skipBtn.addEventListener("click", skipOrReveal);
+hintBtn.addEventListener("click", showHint);
 nextBtn.addEventListener("click", pickNext);
 rangeSelect.addEventListener("click", (e) => {
   const btn = e.target.closest(".range-btn");
