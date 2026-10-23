@@ -54,7 +54,7 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-23), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-24), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
 // entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
@@ -62,7 +62,8 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // 田/誠/哥/弟/妹 with PDF 18, 幾/誰/進/坐/看/照/相 with PDF 19 and 片 with
 // PDF 20 (past the divider, but the weekly test runs "till 片"), 漂/亮/多/都
 // with PDF 21, 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩"), and
-// 朋/友 plus the next grid page's 男/女/次/母 with PDF 23.
+// 朋/友 plus the next grid page's 男/女/次/母 with PDF 23, and 太/說/打/球
+// with PDF 24 (test "till 球").
 // Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
@@ -221,6 +222,17 @@ const WORD_DEFS = [
   [{ ch: "一", accented: "yí" }, { ch: "次", accented: "cì" }], // 一次 once
   [{ ch: "再", accented: "zài" }, { ch: "看", accented: "kàn" }, { ch: "一", accented: "yí" }, { ch: "次", accented: "cì" }], // 再看一次 look once more
   [{ ch: "伯", accented: "bó" }, { ch: "母", accented: "mǔ" }], // 伯母 auntie (polite, a friend's mother)
+  // PDF 24
+  [{ ch: "太", accented: "tài" }, { ch: "太", accented: "tai" }], // 太太 Mrs., wife
+  [{ ch: "說", accented: "shuō" }], // 說 to say, speak
+  [{ ch: "說", accented: "shuō" }, { ch: "話", accented: "huà" }], // 說話 to talk
+  [{ ch: "打", accented: "dǎ" }, { ch: "球", accented: "qiú" }], // 打球 to play ball games
+  [{ ch: "男", accented: "nán" }, { ch: "人", accented: "rén" }], // 男人 man
+  [{ ch: "女", accented: "nǚ" }, { ch: "人", accented: "rén" }], // 女人 woman
+  [{ ch: "男", accented: "nán" }, { ch: "生", accented: "shēng" }], // 男生 male student, guy
+  [{ ch: "女", accented: "nǚ" }, { ch: "生", accented: "shēng" }], // 女生 female student, girl
+  [{ ch: "男", accented: "nán" }, { ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 男老師 male teacher
+  [{ ch: "女", accented: "nǚ" }, { ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 女老師 female teacher
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -441,6 +453,11 @@ const LOOKALIKE_DEFS = [
   { chars: "男田", note: "男 is 田 (field) over 力 (strength)." },
   { chars: "女她好", note: "女 on its own, then as the left side." },
   { chars: "次歡", note: "Both have 欠 on the right." },
+  // PDF 24
+  { chars: "太天", note: "Both grow out of 大 (big): 太 adds a dot, 天 a line on top." },
+  { chars: "說話誰", note: "All have 訁 (speech) on the left." },
+  { chars: "打接", note: "Both have 扌 (hand) on the left." },
+  { chars: "球班王", note: "球 has 王 (jade) on the left; 班 has two of them." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -707,6 +724,32 @@ const SENTENCE_DEFS = [
   { chunks: ["我們班", "有", "兩個", "老師"], end: "。", gloss: "There are two teachers in our class." },
   { chunks: ["我哥哥", "有", "兩張", "你的", "照片"], end: "。", gloss: "My older brother has two photos of you." },
   { chunks: ["請", "你", "再", "看", "一次"], end: "。", gloss: "Please look at it once more." },
+  // PDF 24: the slides' 朋友 / 男女 / 次 / 節 / 伯母 prompts.
+  { chunks: ["他", "是", "我的", "好", "朋友"], end: "。", gloss: "He is my good friend." },
+  { chunks: ["我", "有", "很多", "印度", "朋友"], end: "。", gloss: "I have lots of Indian friends." },
+  { chunks: ["那個", "男老師", "是", "台灣人"], end: "。", gloss: "That male teacher is Taiwanese." },
+  { chunks: ["我們", "是", "好朋友，", "不是", "男女朋友"], end: "。", gloss: "We're good friends, not a couple." },
+  {
+    chunks: ["我", "一個星期", "喝", "三次", "咖啡"],
+    alts: [["一個星期", "我", "喝", "三次", "咖啡"]],
+    end: "。",
+    gloss: "I drink coffee three times a week.",
+  },
+  { chunks: ["這", "是", "我", "第一次", "來", "台灣"], end: "。", gloss: "This is my first time in Taiwan." },
+  { chunks: ["我們", "還", "有", "一節", "課"], end: "。", gloss: "We still have one class left." },
+  {
+    chunks: ["我們", "一個星期", "有", "兩節", "中文課"],
+    alts: [["一個星期", "我們", "有", "兩節", "中文課"]],
+    end: "。",
+    gloss: "We have two Chinese lessons a week.",
+  },
+  { chunks: ["我伯母", "很", "喜歡", "喝", "茶"], end: "。", gloss: "My aunt (dad's older brother's wife) really likes tea." },
+  {
+    chunks: ["我阿姨", "今天", "要", "來", "我家"],
+    alts: [["今天", "我阿姨", "要", "來", "我家"]],
+    end: "。",
+    gloss: "My aunt is coming to my home today.",
+  },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -721,8 +764,10 @@ function sentencePinyin(chunks, end) {
   chars.forEach((ch, i) => {
     if (ch === "不") syl[i] = FOURTH_TONE_RE.test(syl[i + 1] || "") ? "bú" : "bù";
     // 一 before a measure word: yí before a 4th tone (次, and 個, underlyingly
-    // gè), yì before 本 / 張. Elsewhere (誠一, 星期一, 第一) it stays yī.
-    if (ch === "一" && "個本張次".includes(chars[i + 1] || "")) syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
+    // gè), yì before 本 / 張 / 節. Elsewhere (誠一, 星期一) it stays yī, and so
+    // does an ordinal: 第一次 is dì yī cì.
+    if (ch === "一" && chars[i - 1] !== "第" && "個本張次節".includes(chars[i + 1] || ""))
+      syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
   });
   let k = 0;
   const words = chunks.map((c) => {
@@ -785,6 +830,8 @@ const LEX = {
     { zh: "那個小姐", en: "that woman", be: "is", s3: true },
     { zh: "張小姐", en: "Miss Zhang", be: "is", s3: true },
     { zh: "田中先生", en: "Mr. Tanaka", be: "is", s3: true },
+    { zh: "王太太", en: "Mrs. Wang", be: "is", s3: true },
+    { zh: "陳太太", en: "Mrs. Chen", be: "is", s3: true },
   ],
   drink: [
     { zh: "綠茶", en: "green tea", brewed: true },
@@ -842,6 +889,12 @@ const LEX = {
     { zh: "王", en: "Wang" },
     { zh: "張", en: "Zhang" },
   ],
+  activity: [
+    { zh: "打球", en: "playing ball games" },
+    { zh: "看書", en: "reading" },
+    { zh: "說中文", en: "speaking Chinese" },
+    { zh: "說英文", en: "speaking English" },
+  ],
   // `vnv` is the V-not-V pair, split as on the slide: 快 / 不快樂.
   adjective: [
     { zh: "快樂", en: "happy", vnv: ["快", "不快樂"] },
@@ -874,6 +927,7 @@ for (const p of LEX.person.filter((w) => w.pro)) {
     { zh: "朋友", en: "friend" },
     { zh: "男朋友", en: "boyfriend", single: true },
     { zh: "女朋友", en: "girlfriend", single: true },
+    { zh: "太太", en: "wife", single: true },
   ]) {
     if (role.single && p.plural) continue; // 他們的男朋友 reads oddly
     LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
@@ -1073,6 +1127,25 @@ const PATTERNS = [
         form === "all" ? `${ofThem(s) === "you" ? "you" : s.en} all like drinking ${d.en}.`
         : form === "none" ? `none of ${ofThem(s)} like drinking ${d.en}.`
         : `not all of ${ofThem(s)} like drinking ${d.en}.`,
+    }),
+  },
+  {
+    // 他很喜歡打球 / 說中文 (PDF 24).
+    id: "hobby",
+    slots: ["person", "activity"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, a], form) => ({
+      subject: T(s),
+      pred: {
+        stmt: ["很", "喜歡", a.zh],
+        ma: ["喜歡", a.zh, "嗎"],
+        vnv: ["喜", "不喜歡", a.zh],
+        neg: ["不", "喜歡", a.zh],
+      }[form],
+      en:
+        form === "stmt" ? `${s.en} really ${third(s, "like", "likes")} ${a.en}.`
+        : form === "neg" ? `${s.en} ${doesnt(s)} like ${a.en}.`
+        : `${does(s)} ${s.en} like ${a.en}?`,
     }),
   },
   {
@@ -1387,6 +1460,7 @@ const CLASSES = [
   { pdf: 21, date: "Oct 14", title: "第二課 · 都", chars: "漂亮多都" },
   { pdf: 22, date: "Oct 16", title: "第二課 · 兩", chars: "兄伯叔阿姨名字書兩" },
   { pdf: 23, date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
+  { pdf: 24, date: "Oct 23", title: "第二課 · 打球", chars: "太說打球" },
 ];
 
 const CLASS_OF_CHAR = new Map();
@@ -1400,7 +1474,8 @@ const CHAR_ENTRY = new Map(CHAR_ENTRIES.map((e) => [e.hanzi, e]));
 
 // Words taught later than all their characters, pinned to the class that
 // taught them (課本 is all old characters but first came up in PDF 19).
-const WORD_TAUGHT = { 課本: "Oct 7", 可是: "Oct 9", 好看: "Oct 9", 中文: "Oct 16", 姐妹: "Oct 16" };
+const WORD_TAUGHT = { 課本: "Oct 7", 可是: "Oct 9", 好看: "Oct 9", 中文: "Oct 16", 姐妹: "Oct 16",
+  男人: "Oct 23", 女人: "Oct 23", 男生: "Oct 23", 女生: "Oct 23", 男老師: "Oct 23", 女老師: "Oct 23" };
 const classOfWord = (w) =>
   Math.max(
     ...[...w.hanzi].map((ch) => CLASS_OF_CHAR.get(ch) ?? -1),
@@ -1913,6 +1988,10 @@ const HINTS = {
   男: "田 (field) + 力 (strength) — the one working the field: male.",
   女: "A woman kneeling. It's the 女 on the left of 媽 姐 妹 她 妳 奶 姓 姨 好.",
   母: "女 with two dots — a mother.",
+  太: "大 (big) with an extra dot — even bigger: too much. 太太 is Mrs.",
+  說: "訁 (speech) — to say.",
+  打: "扌 (hand) — hitting with your hand.",
+  球: "王 (jade) + 求 (qiú) gives the sound: qiú — a jade bead, a ball.",
 };
 
 // A memory hint for each character in the answer: after any miss, and
