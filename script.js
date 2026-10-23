@@ -2225,7 +2225,12 @@ function renderLookupResult(raw) {
       if (r.status === "unlearned") {
         return `<div class="lookup-row unlearned">${escapeHtml(r.parsed)} — haven't learned this yet</div>`;
       }
-      return `<div class="lookup-row learned">${escapeHtml(r.parsed)} → <span class="lookup-chars">${r.chars.join(" / ")}</span></div>`;
+      // Memory hint for each matching character, same as in My Mistakes.
+      const hints = r.chars
+        .filter((ch) => HINTS[ch])
+        .map((ch) => `<div class="lookup-hint"><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`)
+        .join("");
+      return `<div class="lookup-row learned">${escapeHtml(r.parsed)} → <span class="lookup-chars">${r.chars.join(" / ")}</span>${hints}</div>`;
     })
     .join("");
 }
