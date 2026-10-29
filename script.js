@@ -54,7 +54,7 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 
 // ---------------------------------------------------------------------------
 // Vocabulary words: only characters/words that actually appear in the
-// teacher's recap-grid review images (class_material/1-3, 7-9, 10-24), up to
+// teacher's recap-grid review images (class_material/1-3, 7-9, 10-25), up to
 // the red divider bar she draws to mark how far the class has covered.
 // The grid grows lesson by lesson: 來/去/回/歡/迎/上/接/什麼/咖啡/牛奶/水
 // entered with PDF 12-13, 紅/烏/龍/喜/要 with PDF 15, 妳/您/她/哪/家/呢/很
@@ -63,7 +63,8 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // PDF 20 (past the divider, but the weekly test runs "till 片"), 漂/亮/多/都
 // with PDF 21, 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩"), and
 // 朋/友 plus the next grid page's 男/女/次/母 with PDF 23, and 太/說/打/球
-// with PDF 24 (test "till 球").
+// with PDF 24 (test "till 球"), and the ball sports 板/排/籃/桌/棒/羽/毛/網
+// plus 學/大/和 with PDF 25.
 // Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
@@ -233,6 +234,26 @@ const WORD_DEFS = [
   [{ ch: "女", accented: "nǚ" }, { ch: "生", accented: "shēng" }], // 女生 female student, girl
   [{ ch: "男", accented: "nán" }, { ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 男老師 male teacher
   [{ ch: "女", accented: "nǚ" }, { ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 女老師 female teacher
+  // PDF 25
+  [{ ch: "板", accented: "bǎn" }, { ch: "球", accented: "qiú" }], // 板球 cricket
+  [{ ch: "排", accented: "pái" }, { ch: "球", accented: "qiú" }], // 排球 volleyball
+  [{ ch: "籃", accented: "lán" }, { ch: "球", accented: "qiú" }], // 籃球 basketball
+  [{ ch: "桌", accented: "zhuō" }, { ch: "球", accented: "qiú" }], // 桌球 table tennis
+  [{ ch: "棒", accented: "bàng" }, { ch: "球", accented: "qiú" }], // 棒球 baseball
+  [{ ch: "羽", accented: "yǔ" }, { ch: "毛", accented: "máo" }, { ch: "球", accented: "qiú" }], // 羽毛球 badminton
+  [{ ch: "網", accented: "wǎng" }, { ch: "球", accented: "qiú" }], // 網球 tennis
+  [{ ch: "學", accented: "xué" }], // 學 to learn
+  [{ ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 學生 student
+  [{ ch: "同", accented: "tóng" }, { ch: "學", accented: "xué" }], // 同學 classmate
+  [{ ch: "大", accented: "dà" }], // 大 big
+  [{ ch: "大", accented: "dà" }, { ch: "家", accented: "jiā" }, { ch: "好", accented: "hǎo" }], // 大家好 hello, everyone
+  [{ ch: "大", accented: "dà" }, { ch: "學", accented: "xué" }], // 大學 university
+  [{ ch: "中", accented: "zhōng" }, { ch: "學", accented: "xué" }], // 中學 middle/high school
+  [{ ch: "小", accented: "xiǎo" }, { ch: "學", accented: "xué" }], // 小學 elementary school
+  [{ ch: "大", accented: "dà" }, { ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 大學生 university student
+  [{ ch: "中", accented: "zhōng" }, { ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 中學生 middle/high school student
+  [{ ch: "小", accented: "xiǎo" }, { ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 小學生 elementary school student
+  [{ ch: "和", accented: "hé" }], // 和 and (Taiwan also says hàn)
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
@@ -458,6 +479,15 @@ const LOOKALIKE_DEFS = [
   { chars: "說話誰", note: "All have 訁 (speech) on the left." },
   { chars: "打接", note: "Both have 扌 (hand) on the left." },
   { chars: "球班王", note: "球 has 王 (jade) on the left; 班 has two of them." },
+  // PDF 25
+  { chars: "大太天", note: "大 is a person with arms out; 太 adds a dot, 天 a line on top." },
+  { chars: "板棒桌", note: "All built on 木 (wood) — on the left, or at the bottom in 桌." },
+  { chars: "排打接", note: "All have 扌 (hand) on the left." },
+  { chars: "籃節第", note: "All have ⺮ (bamboo) on top." },
+  { chars: "網紅綠", note: "All have 糸 (silk/thread) on the left." },
+  { chars: "和秋", note: "Both have 禾 (grain) on the left." },
+  { chars: "學字", note: "Both have 子 (child) at the bottom." },
+  { chars: "毛手", note: "毛's last stroke curls right; 手's hooks left." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -750,6 +780,42 @@ const SENTENCE_DEFS = [
     end: "。",
     gloss: "My aunt is coming to my home today.",
   },
+  // PDF 25: ball sports, 學 / 學生 / 同學, 和, the 對話二 questions and the 太太 / 說 / 打球 prompts.
+  { chunks: ["你", "喜歡", "打", "什麼", "球"], end: "？", gloss: "What ball games do you like playing?" },
+  { chunks: ["你們", "喜歡", "學", "中文", "嗎"], end: "？", gloss: "Do you all like learning Chinese?" },
+  {
+    chunks: ["我們", "是", "學生，", "不是", "老師"],
+    alts: [{ chunks: ["我們", "是", "老師，", "不是", "學生"], gloss: "We're teachers, not students." }],
+    end: "。",
+    gloss: "We're students, not teachers.",
+  },
+  { chunks: ["他們", "是", "我", "日文班的", "同學"], end: "。", gloss: "They're my classmates from Japanese class." },
+  {
+    chunks: ["我", "和", "我哥哥", "都", "喜歡", "打", "籃球"],
+    alts: [["我哥哥", "和", "我", "都", "喜歡", "打", "籃球"]],
+    end: "。",
+    gloss: "My older brother and I both like playing basketball.",
+  },
+  { chunks: ["誠一", "姓", "什麼"], end: "？", gloss: "What is Seiichi's surname?" },
+  {
+    chunks: ["誰", "是", "老師"],
+    alts: [["老師", "是", "誰"]],
+    end: "？",
+    gloss: "Who is the teacher?",
+  },
+  { chunks: ["誠一家", "有", "幾個", "人"], end: "？", gloss: "How many people are in Seiichi's family?" },
+  { chunks: ["誰", "喜歡", "看", "書"], end: "？", gloss: "Who likes reading?" },
+  { chunks: ["張太太", "喜歡", "喝", "咖啡", "嗎"], end: "？", gloss: "Does Mrs. Zhang like drinking coffee?" },
+  { chunks: ["他太太", "很", "漂亮"], end: "。", gloss: "His wife is pretty." },
+  { chunks: ["老師", "說", "明天", "沒有", "課"], end: "。", gloss: "The teacher says there's no class tomorrow." },
+  { chunks: ["他", "很", "喜歡", "說話"], end: "。", gloss: "He likes talking a lot." },
+  {
+    chunks: ["明天", "我們", "一起", "去", "打球"],
+    alts: [["我們", "明天", "一起", "去", "打球"]],
+    end: "。",
+    gloss: "Let's go play ball together tomorrow.",
+  },
+  { chunks: ["不要", "打", "人"], end: "。", gloss: "Don't hit people." },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -764,9 +830,9 @@ function sentencePinyin(chunks, end) {
   chars.forEach((ch, i) => {
     if (ch === "不") syl[i] = FOURTH_TONE_RE.test(syl[i + 1] || "") ? "bú" : "bù";
     // 一 before a measure word: yí before a 4th tone (次, and 個, underlyingly
-    // gè), yì before 本 / 張 / 節. Elsewhere (誠一, 星期一) it stays yī, and so
+    // gè), yì before 本 / 張 / 節 and in 一起. Elsewhere (誠一, 星期一) it stays yī, and so
     // does an ordinal: 第一次 is dì yī cì.
-    if (ch === "一" && chars[i - 1] !== "第" && "個本張次節".includes(chars[i + 1] || ""))
+    if (ch === "一" && chars[i - 1] !== "第" && "個本張次節起".includes(chars[i + 1] || ""))
       syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
   });
   let k = 0;
@@ -894,6 +960,20 @@ const LEX = {
     { zh: "看書", en: "reading" },
     { zh: "說中文", en: "speaking Chinese" },
     { zh: "說英文", en: "speaking English" },
+    { zh: "打籃球", en: "playing basketball" },
+    { zh: "打排球", en: "playing volleyball" },
+    { zh: "打網球", en: "playing tennis" },
+    { zh: "打羽毛球", en: "playing badminton" },
+    { zh: "打棒球", en: "playing baseball" },
+    { zh: "打桌球", en: "playing table tennis" },
+    { zh: "打板球", en: "playing cricket" },
+    { zh: "學中文", en: "learning Chinese" },
+  ],
+  school: [
+    { zh: "學生", en: "a student", pl: "students" },
+    { zh: "大學生", en: "a university student", pl: "university students" },
+    { zh: "中學生", en: "a high school student", pl: "high school students" },
+    { zh: "小學生", en: "an elementary school student", pl: "elementary school students" },
   ],
   // `vnv` is the V-not-V pair, split as on the slide: 快 / 不快樂.
   adjective: [
@@ -1128,6 +1208,23 @@ const PATTERNS = [
         : form === "none" ? `none of ${ofThem(s)} like drinking ${d.en}.`
         : `not all of ${ofThem(s)} like drinking ${d.en}.`,
     }),
+  },
+  {
+    // 我們是學生 / 他是不是大學生 (PDF 25).
+    id: "student",
+    slots: ["person", "school"],
+    forms: ["stmt", "ma", "vnv", "neg"],
+    build: ([s, r], form) => {
+      const what = s.plural ? r.pl : r.en;
+      return {
+        subject: T(s),
+        pred: { stmt: ["是", r.zh], ma: ["是", r.zh, "嗎"], vnv: ["是", "不是", r.zh], neg: ["不", "是", r.zh] }[form],
+        en:
+          form === "stmt" ? `${s.en} ${s.be} ${what}.`
+          : form === "neg" ? `${s.en} ${s.be} not ${what}.`
+          : `${s.be} ${s.en} ${what}?`,
+      };
+    },
   },
   {
     // 他很喜歡打球 / 說中文 (PDF 24).
@@ -1461,6 +1558,7 @@ const CLASSES = [
   { pdf: 22, date: "Oct 16", title: "第二課 · 兩", chars: "兄伯叔阿姨名字書兩" },
   { pdf: 23, date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
   { pdf: 24, date: "Oct 23", title: "第二課 · 打球", chars: "太說打球" },
+  { pdf: 25, date: "Oct 28", title: "第二課 · 和", chars: "板排籃桌棒羽毛網學大和" },
 ];
 
 const CLASS_OF_CHAR = new Map();
@@ -1992,6 +2090,17 @@ const HINTS = {
   說: "訁 (speech) — to say.",
   打: "扌 (hand) — hitting with your hand.",
   球: "王 (jade) + 求 (qiú) gives the sound: qiú — a jade bead, a ball.",
+  板: "木 (wood) — a wooden board or bat: 板球 is cricket.",
+  排: "扌 (hand) — lining things up by hand; 排球 is volleyball.",
+  籃: "⺮ (bamboo) — a woven bamboo basket: 籃球 is basketball.",
+  桌: "木 (wood) at the bottom — a wooden table: 桌球 is table tennis.",
+  棒: "木 (wood) — a wooden stick or bat: 棒球 is baseball.",
+  羽: "Two feathers side by side.",
+  毛: "A tuft of hair. 羽毛 (feathers) make a shuttlecock: 羽毛球 is badminton.",
+  網: "糸 (thread) — a net knotted from thread: 網球 is tennis.",
+  學: "子 (child) under a roof, with hands around it — a child being taught.",
+  大: "A person stretching their arms out wide: big.",
+  和: "禾 (grain) + 口 (mouth) — sharing a meal: and. Taiwan often says hàn.",
 };
 
 // A memory hint for each character in the answer: after any miss, and
