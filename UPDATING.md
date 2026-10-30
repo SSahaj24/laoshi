@@ -57,6 +57,8 @@ up to date when the process changes.
       `{ pdf: N, date: "Mon D", title: "第X課 · topic", chars: "…" }` with the
       PDF number, the date from the file name, the topic from the file name,
       and only the newly added grid characters. Skip a PDF that added nothing.
+      Quick Reference reads its "Lesson N" label from `classLabel`: a new 第X課
+      needs adding to the map there.
 - [ ] **`WORD_TAUGHT`**: if a new word uses only old characters (e.g. 課本),
       pin it to this class.
 - [ ] **`HINTS`**: add a memory hint for each new character: its meaning part,

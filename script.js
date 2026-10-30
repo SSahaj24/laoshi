@@ -2447,6 +2447,14 @@ function lookupPinyin(raw) {
     });
 }
 
+// "Lesson 2 · PDF 22 · Oct 16", or the topic for classes before Lesson 1.
+function classLabel(ch) {
+  const c = CLASSES[CLASS_OF_CHAR.get(ch)];
+  if (!c) return "";
+  const lesson = { 第一課: "Lesson 1", 第二課: "Lesson 2" }[c.title.slice(0, 3)];
+  return `${lesson || escapeHtml(c.title)} · PDF ${c.pdf} · ${c.date}`;
+}
+
 function renderLookupResult(raw) {
   const results = lookupPinyin(raw);
   if (results.length === 0) {
@@ -2461,10 +2469,12 @@ function renderLookupResult(raw) {
       if (r.status === "unlearned") {
         return `<div class="lookup-row unlearned">${escapeHtml(r.parsed)} — haven't learned this yet</div>`;
       }
-      // Memory hint for each matching character, same as in My Mistakes.
+      // Where each match was taught, plus its memory hint if it has one.
       const hints = r.chars
-        .filter((ch) => HINTS[ch])
-        .map((ch) => `<div class="lookup-hint"><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`)
+        .map((ch) => {
+          const hint = HINTS[ch] ? ` ${HINTS[ch]}` : "";
+          return `<div class="lookup-hint"><span class="hint-char">${ch}</span>${hint}<div class="lookup-lesson">${classLabel(ch)}</div></div>`;
+        })
         .join("");
       return `<div class="lookup-row learned">${escapeHtml(r.parsed)}<span class="lookup-chars">${r.chars.join(" / ")}</span>${hints}</div>`;
     })

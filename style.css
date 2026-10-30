@@ -633,6 +633,13 @@ body {
   color: var(--ink-dim);
 }
 
+.lookup-lesson {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  opacity: 0.85;
+}
+
 .lookup-row.unlearned,
 .lookup-row.invalid {
   background: var(--wrong-bg);
