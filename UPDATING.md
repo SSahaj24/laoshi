@@ -10,8 +10,11 @@ up to date when the process changes.
       teacher's recap grid (the coloured character grid at the start of each
       PDF). Title-slide or example-only characters stay out.
 - [ ] **How far to go.** The red divider marks what's been covered. If the
-      weekly-test slide says "Till X" further along, include up to X, and say
-      so in the commit and to the user.
+      weekly-test slide says "Till X" further along, go up to X, and say so in
+      the commit and to the user. The test limit is the final word.
+- [ ] **`NOT_YET` in `script.js`.** Add a new PDF's characters as usual, but list
+      any past the latest weekly-test limit ("Till X") in `NOT_YET`: every mode
+      hides them and anything using them. Remove them once a test reaches them.
 - [ ] **Traditional characters only.**
 - [ ] **Append, never insert.** New entries go at the end of `WORD_DEFS`,
       `LOOKALIKE_DEFS`, `SENTENCE_DEFS` and `CLASSES`. Saved mistakes are stored

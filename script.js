@@ -74,6 +74,13 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // 4th tone) — exactly as the slides distinguish them.
 // ---------------------------------------------------------------------------
 
+// Characters already in the data below but past the current weekly test
+// ("till 球", PDF 24). Everything using them is left out of every mode. Their
+// entries stay in the lists so saved ids hold; empty this when a test reaches them.
+const NOT_YET = "板排籃桌棒羽毛網學大和";
+const usesNotYet = (text) => [...text].some((ch) => NOT_YET.includes(ch));
+const syllablesText = (syllables) => syllables.map((s) => s.ch).join("");
+
 const WORD_DEFS = [
   [{ ch: "班", accented: "bān" }, { ch: "代", accented: "dài" }], // 班代 class rep
   [{ ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 老師 teacher
@@ -256,7 +263,7 @@ const WORD_DEFS = [
   [{ ch: "和", accented: "hé" }], // 和 and (Taiwan also says hàn)
 ];
 
-const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`));
+const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`)).filter((w) => !usesNotYet(w.hanzi));
 
 // ---------------------------------------------------------------------------
 // Answer parsing.
@@ -346,7 +353,9 @@ const CHAR_INDEX = (() => {
   };
   DIGITS.forEach((d) => add(d.ch, d.accented));
   add(TEN.ch, TEN.accented);
-  WORD_DEFS.forEach((syllables) => syllables.forEach((s) => add(s.ch, s.accented)));
+  WORD_DEFS.filter((syllables) => !usesNotYet(syllablesText(syllables))).forEach((syllables) =>
+    syllables.forEach((s) => add(s.ch, s.accented)),
+  );
   return [...seen.values()];
 })();
 
@@ -396,6 +405,7 @@ const COMBO_PAIRS = (() => {
 const CHAR_EXAMPLES = (() => {
   const examples = new Map(); // ch -> {hanzi, pinyinDisplay}
   for (const syllables of WORD_DEFS) {
+    if (usesNotYet(syllablesText(syllables))) continue;
     const hanzi = syllables.map((s) => s.ch).join("");
     const pinyinDisplay = syllables.map((s) => s.accented).join(" ");
     for (const s of syllables) {
@@ -491,6 +501,7 @@ const LOOKALIKE_DEFS = [
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
+  if (usesNotYet(def.chars)) return null; // or a cut-down copy of an older group
   const syllables = [...def.chars].map((ch) => CHAR_INDEX.find((e) => e.ch === ch)).filter(Boolean);
   if (syllables.length < 2) return null;
   return { ...makeEntry(syllables, `look-${i}`), kind: "lookalike", syllables, note: def.note };
@@ -1380,7 +1391,7 @@ const PATTERNS = [
       en: `${s.en} ${third(s, "want", "wants")} to go to ${p.en}${t} — ${whatAbout(s2)}`,
     }),
   },
-];
+].filter((pat) => pat.slots.every((cat) => LEX[cat].length)); // a whole slot can be NOT_YET
 const PATTERN_BY_ID = new Map(PATTERNS.map((p) => [p.id, p]));
 
 function realize(pat, fillers, form, time, tp) {
@@ -1483,6 +1494,7 @@ function buildGenerated(spec) {
 }
 
 const SENTENCES = SENTENCE_DEFS.map((def, i) => {
+  if (usesNotYet(def.chunks.join(""))) return null;
   // Hand-written alternates first (an alt is a chunk list, or { chunks, gloss }
   // when the new order changes the meaning); then anything else the grammar
   // can build from the same tiles.
@@ -1500,7 +1512,7 @@ const SENTENCES = SENTENCE_DEFS.map((def, i) => {
     variants,
     ...variants[def.chunks.join("")],
   };
-});
+}).filter(Boolean);
 
 // A fresh batch every lap: the hand-written sentences at this level (which
 // include the real test-slide questions) plus newly generated ones.
@@ -1559,7 +1571,9 @@ const CLASSES = [
   { pdf: 23, date: "Oct 21", title: "第二課 · 次", chars: "朋友男女次母" },
   { pdf: 24, date: "Oct 23", title: "第二課 · 打球", chars: "太說打球" },
   { pdf: 25, date: "Oct 28", title: "第二課 · 和", chars: "板排籃桌棒羽毛網學大和" },
-];
+]
+  .map((c) => ({ ...c, chars: [...c.chars].filter((ch) => !usesNotYet(ch)).join("") }))
+  .filter((c) => c.chars);
 
 const CLASS_OF_CHAR = new Map();
 CLASSES.forEach((c, i) => [...c.chars].forEach((ch) => CLASS_OF_CHAR.has(ch) || CLASS_OF_CHAR.set(ch, i)));
@@ -1934,7 +1948,7 @@ function updateStats() {
 }
 
 function updateMistakeCount() {
-  const n = state.mistakes.size;
+  const n = mistakesPool().length; // not state.mistakes.size: NOT_YET cards stay saved but hidden
   mistakeCount.textContent = `${n} mistake${n === 1 ? "" : "s"} saved`;
   resetMistakesBtn.disabled = n === 0;
 }
