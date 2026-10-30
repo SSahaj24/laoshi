@@ -642,7 +642,18 @@ body {
 .lookup-chars {
   font-family: var(--font-hanzi);
   font-weight: 400; /* 楷書 has no bold */
-  font-size: 1.2em;
+  font-size: 3rem;
+  line-height: 1.2;
+  color: var(--ink);
+  display: block;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.lookup-hint .hint-char {
+  font-size: 1.8rem;
+  line-height: 1.2;
+  vertical-align: middle;
 }
 
 /* Phone sizing. Must stay last: the base .pinyin-input rule sits further up

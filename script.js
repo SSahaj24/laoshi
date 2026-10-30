@@ -2466,7 +2466,7 @@ function renderLookupResult(raw) {
         .filter((ch) => HINTS[ch])
         .map((ch) => `<div class="lookup-hint"><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`)
         .join("");
-      return `<div class="lookup-row learned">${escapeHtml(r.parsed)} → <span class="lookup-chars">${r.chars.join(" / ")}</span>${hints}</div>`;
+      return `<div class="lookup-row learned">${escapeHtml(r.parsed)}<span class="lookup-chars">${r.chars.join(" / ")}</span>${hints}</div>`;
     })
     .join("");
 }
