@@ -64,7 +64,8 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // with PDF 21, 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩"), and
 // 朋/友 plus the next grid page's 男/女/次/母 with PDF 23, and 太/說/打/球
 // with PDF 24 (test "till 球"), and the ball sports 板/排/籃/桌/棒/羽/毛/網
-// plus 學/大/和 with PDF 25.
+// plus 學/大/和 with PDF 25. PDF 26 kept the same grid (系 is only on the
+// department slides, so it stays out).
 // Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
@@ -261,6 +262,9 @@ const WORD_DEFS = [
   [{ ch: "中", accented: "zhōng" }, { ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 中學生 middle/high school student
   [{ ch: "小", accented: "xiǎo" }, { ch: "學", accented: "xué" }, { ch: "生", accented: "shēng" }], // 小學生 elementary school student
   [{ ch: "和", accented: "hé" }], // 和 and (Taiwan also says hàn)
+  // PDF 26
+  [{ ch: "學", accented: "xué" }, { ch: "期", accented: "qí" }], // 學期 semester
+  [{ ch: "大", accented: "dà" }, { ch: "家", accented: "jiā" }], // 大家 everyone
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`)).filter((w) => !usesNotYet(w.hanzi));
@@ -827,6 +831,38 @@ const SENTENCE_DEFS = [
     gloss: "Let's go play ball together tomorrow.",
   },
   { chunks: ["不要", "打", "人"], end: "。", gloss: "Don't hit people." },
+  // PDF 26: the slides' sports / 學生 / 學期 / 大家 / 和 prompts (hidden while 學大和 are NOT_YET).
+  { chunks: ["印度人", "很", "喜歡", "打", "板球"], end: "。", gloss: "Indians really like playing cricket." },
+  {
+    chunks: ["我們", "星期六", "一起", "打", "羽毛球"],
+    alts: [["星期六", "我們", "一起", "打", "羽毛球"]],
+    end: "。",
+    gloss: "We play badminton together on Saturday.",
+  },
+  { chunks: ["你", "要", "不要", "和", "我", "打", "網球"], end: "？", gloss: "Do you want to play tennis with me?" },
+  { chunks: ["我的", "同學", "都", "很", "好看"], end: "。", gloss: "My classmates are all good-looking." },
+  { chunks: ["我們班", "有", "三十四個", "學生"], end: "。", gloss: "There are 34 students in our class." },
+  {
+    chunks: ["這個", "學期", "我", "學", "中文"],
+    alts: [["我", "這個", "學期", "學", "中文"]],
+    end: "。",
+    gloss: "I'm studying Chinese this semester.",
+  },
+  {
+    chunks: ["下個", "學期", "你", "還", "要", "上", "中文課", "嗎"],
+    alts: [["你", "下個", "學期", "還", "要", "上", "中文課", "嗎"]],
+    end: "？",
+    gloss: "Do you still want to take Chinese next semester?",
+  },
+  { chunks: ["老師", "叫", "大家", "看", "書"], end: "。", gloss: "The teacher tells everyone to read." },
+  { chunks: ["大家", "一起", "去", "打球"], end: "。", gloss: "Everyone's going to play ball together." },
+  {
+    chunks: ["今天", "我", "和", "朋友", "打球"],
+    alts: [["我", "今天", "和", "朋友", "打球"]],
+    end: "。",
+    gloss: "Today I'm playing ball with a friend.",
+  },
+  { chunks: ["我爸爸", "和", "媽媽", "都", "是", "台灣人"], end: "。", gloss: "My dad and mom are both Taiwanese." },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
