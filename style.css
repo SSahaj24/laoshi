@@ -722,6 +722,102 @@ body {
   font-weight: 600;
 }
 
+/* Reading mode: a sentence instead of a big character, and answer buttons
+   instead of the pinyin box. */
+.read-area {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card.read-mode .read-area {
+  display: flex;
+}
+
+.card.read-mode .answer-form {
+  display: none;
+}
+
+.card.read-mode .hanzi {
+  font-size: clamp(1.7rem, 6vw, 2.4rem);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+.read-label {
+  text-align: center;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+}
+
+.read-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.read-option {
+  font: inherit;
+  font-size: 1.02rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.read-option[lang="zh-Hant"] {
+  font-family: var(--font-hanzi);
+  font-size: 1.35rem;
+}
+
+.read-option::before {
+  content: attr(data-key) ".";
+  display: inline-block;
+  min-width: 1.6em;
+  color: var(--ink-dim);
+  font-family: "Noto Sans", Calibri, Arial, sans-serif;
+  font-size: 0.85rem;
+}
+
+.read-option:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.read-option:disabled {
+  cursor: default;
+}
+
+.read-option.right {
+  border-color: var(--correct);
+  background: var(--correct-bg);
+  color: var(--correct);
+}
+
+.read-option.picked-wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-bg);
+  color: var(--wrong);
+}
+
+.read-reveal,
+.read-self {
+  width: 100%;
+}
+
+.read-answer {
+  margin-top: 8px;
+  font-family: var(--font-hanzi);
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+
 @media (max-width: 480px) {
   /* Stack the button under the input so the answer gets the full card width. */
   .answer-form {

@@ -879,7 +879,7 @@ function sentencePinyin(chunks, end) {
     // 一 before a measure word: yí before a 4th tone (次, and 個, underlyingly
     // gè), yì before 本 / 張 / 節 and in 一起. Elsewhere (誠一, 星期一) it stays yī, and so
     // does an ordinal: 第一次 is dì yī cì.
-    if (ch === "一" && chars[i - 1] !== "第" && "個本張次節起".includes(chars[i + 1] || ""))
+    if (ch === "一" && chars[i - 1] !== "第" && chars[i + 1] && "個本張次節起".includes(chars[i + 1]))
       syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
   });
   let k = 0;
@@ -1057,6 +1057,7 @@ for (const p of LEX.person.filter((w) => w.pro)) {
     { zh: "太太", en: "wife", single: true },
   ]) {
     if (role.single && p.plural) continue; // 他們的男朋友 reads oddly
+    if (role.zh === "太太" && /[她妳]/.test(p.zh)) continue; // 她的太太 is beyond this course
     LEX.person.push({ tiles: [`${p.zh}的`, role.zh], en: `${p.poss} ${role.en}`, be: "is", s3: true, mod: true });
   }
 }
@@ -1578,6 +1579,226 @@ function entryFromValue(v) {
 }
 
 // ---------------------------------------------------------------------------
+// Reading: the comprehension questions the weekly test uses (PDF 26's last
+// slide: read a date and pick the calendar, read a caption and pick the
+// scene). Four kinds, all built from sentences inside the test limit:
+//  - meaning: a Chinese sentence and three or four English meanings. Wrong
+//    meanings change one detail of the real one (another drink, another
+//    person, 都不 for 不都), so the sentence has to be read, not guessed.
+//  - reply:   a question and the one sensible answer among unrelated ones.
+//  - number:  dates, weekdays and counts (三月十八號 → March 18).
+// "No options" shows the sentence alone; reveal the meaning, then say
+// whether you had it. Reading cards aren't saved to My Mistakes: they're
+// generated fresh every round.
+// ---------------------------------------------------------------------------
+
+const READ_KEY = "laoshi_reading_mode";
+const READ_PREFIX = "read:";
+
+const readPerson = (zh) => LEX.person.find((w) => w.zh === zh);
+const FEMALE_RE = /[她妳姐妹媽奶姨母女]|小姐|太太/;
+
+// Who answers a question: 你 → 我, 你們 → 我們, anyone else → 他 / 她 / 他們.
+function answerSubject(s) {
+  if (["你", "妳", "您"].includes(s.zh)) return readPerson("我");
+  if (s.zh === "你們") return readPerson("我們");
+  if (s.grp === 1) return null; // nobody asks "am I…?"
+  if (s.plural) return readPerson("他們");
+  return readPerson(FEMALE_RE.test(T(s).join("")) ? "她" : "他");
+}
+
+const REPLY_PATTERNS = ["nat", "drink", "like", "want", "move", "have", "adj", "hobby", "photo", "purpose", "surname"];
+const textOf = (chunks, end) => chunks.join("").replace(/，$/, "") + end;
+
+function randomFillers(pat, first) {
+  for (let tries = 0; tries < 30; tries++) {
+    const fillers = pat.slots.map((cat, i) => (i === 0 && first ? first : pickOne(LEX[cat])));
+    if (fillers.some((f) => !f)) return null;
+    if (new Set(fillers).size !== fillers.length || (pat.ok && !pat.ok(fillers))) continue;
+    if (!pat.allowShared && !noSharedTiles(...fillers)) continue;
+    return fillers;
+  }
+  return null;
+}
+
+function readEntry(type, label, promptChunks, end, options, answer, gloss) {
+  const prompt = textOf(promptChunks, end);
+  return {
+    value: `${READ_PREFIX}${type}:${prompt}`,
+    kind: "read",
+    readType: type,
+    label,
+    hanzi: prompt,
+    options,
+    answer,
+    reveal: { hanzi: prompt, pinyinDisplay: sentencePinyin(promptChunks, end).replace(/\.$/, end ? "." : ""), gloss },
+  };
+}
+
+function withOptions(correct, wrong) {
+  const options = shuffled([correct, ...wrong]);
+  return { options, answer: options.indexOf(correct) };
+}
+
+// Same pattern, one detail changed: other fillers, a flipped form or time.
+const FORM_FLIPS = { stmt: ["neg"], neg: ["stmt"], all: ["none", "notAll"], none: ["all", "notAll"], notAll: ["all", "none"], posneg: ["negpos"], negpos: ["posneg"] };
+
+function readMeaningGenerated() {
+  const spec = randomSentenceSpec(pickOne(["easy", "medium", "medium", "hard"]));
+  const main = spec && buildGenerated(spec);
+  if (!main) return null;
+  const pat = PATTERN_BY_ID.get(spec.p);
+  const fillers = pat.slots.map((cat, i) => LEX[cat].find((w) => wordKey(w) === spec.s[i]));
+  const time = spec.t ? LEX.time.find((w) => w.zh === spec.t) : null;
+  const glossOf = (f, form, t) => capFirst(realize(pat, f, form, t, spec.tp).en);
+  const candidates = [];
+  for (const form of FORM_FLIPS[spec.f] || []) if (pat.forms.includes(form)) candidates.push(glossOf(fillers, form, time));
+  pat.slots.forEach((cat, i) => {
+    for (const alt of shuffled(LEX[cat]).slice(0, 6)) {
+      const f = fillers.map((x, j) => (j === i ? alt : x));
+      if (new Set(f).size !== f.length || (pat.ok && !pat.ok(f))) continue;
+      if (!pat.allowShared && !noSharedTiles(...f)) continue;
+      candidates.push(glossOf(f, spec.f, time));
+    }
+  });
+  if (time) for (const t of shuffled(LEX.time).slice(0, 2)) candidates.push(glossOf(fillers, spec.f, t));
+  const wrong = shuffled([...new Set(candidates)].filter((g) => g !== main.gloss)).slice(0, 3);
+  if (wrong.length < 2) return null;
+  const { options, answer } = withOptions(main.gloss, wrong);
+  return readEntry("meaning", "What does this mean?", main.chunks, formEnd(spec.f), options, answer, main.gloss);
+}
+
+// A hand-written sentence; wrong meanings come from the sentences that
+// share the most characters with it, so they look related.
+function readMeaningCurated() {
+  const s = pickOne(SENTENCES);
+  const chars = new Set(s.hanzi);
+  const scored = SENTENCES.filter((o) => o.gloss !== s.gloss)
+    .map((o) => ({ o, n: [...new Set(o.hanzi)].filter((c) => chars.has(c)).length + Math.random() }))
+    .sort((a, b) => b.n - a.n);
+  const wrong = [...new Set(scored.slice(0, 8).map((x) => x.o.gloss))].slice(0, 3);
+  const { options, answer } = withOptions(s.gloss, shuffled(wrong));
+  return readEntry("meaning", "What does this mean?", s.chunks, s.hanzi.slice(-1), options, answer, s.gloss);
+}
+
+// A yes/no question and its answer, among answers to other questions.
+function readReplyGenerated() {
+  const pat = PATTERN_BY_ID.get(pickOne(REPLY_PATTERNS.filter((id) => PATTERN_BY_ID.has(id))));
+  if (!pat) return null;
+  const fillers = randomFillers(pat);
+  const subj = fillers && answerSubject(fillers[0]);
+  if (!subj) return null;
+  const qForm = pickOne(pat.forms.filter((f) => f === "ma" || f === "vnv"));
+  const aForm = pickOne(pat.forms.filter((f) => f === "stmt" || f === "neg"));
+  if (!qForm || !aForm) return null;
+  const time = pat.time && Math.random() < 0.4 ? pickOne(LEX.time) : null;
+  const tp = Math.random() < 0.5 ? "front" : "mid";
+  const q = realize(pat, fillers, qForm, time, tp);
+  const aFillers = [subj, ...fillers.slice(1)];
+  if (pat.ok && !pat.ok(aFillers)) return null;
+  const a = realize(pat, aFillers, aForm, time, tp);
+  const correct = textOf(a.chunks, "。");
+  const wrong = [];
+  for (const id of shuffled(REPLY_PATTERNS.filter((x) => x !== pat.id && PATTERN_BY_ID.has(x)))) {
+    const other = PATTERN_BY_ID.get(id);
+    const f = randomFillers(other, other.slots[0] === "person" || (other.slots[0] === "pronoun" && !subj.plural) ? subj : null);
+    if (!f) continue;
+    const text = textOf(realize(other, f, "stmt", null, "mid").chunks, "。");
+    if (text !== correct && !wrong.includes(text)) wrong.push(text);
+    if (wrong.length === 3) break;
+  }
+  if (wrong.length < 2) return null;
+  const { options, answer } = withOptions(correct, wrong);
+  const gloss = `${capFirst(q.en)} — ${capFirst(a.en)}`;
+  return readEntry("reply", "Pick the best reply", q.chunks, "？", options, answer, gloss);
+}
+
+// Question-and-answer pairs from the slides' dialogues and drills. Spaces in a
+// question mark its words, for the pinyin; they are not shown.
+const READ_QA = [
+  ["你 叫 什麼 名字？", "我叫陳月美。", "What's your name? — I'm Chen Yuemei."],
+  ["你家 有 幾個 人？", "我家有七個人。", "How many people are in your family? — Seven."],
+  ["這 是 你 姐姐 嗎？", "不是，是我妹妹。", "Is this your older sister? — No, it's my younger sister."],
+  ["你 要 不要 喝 茶？", "好，謝謝。", "Would you like some tea? — Yes, thanks."],
+  ["謝謝 你。", "不客氣。", "Thank you. — You're welcome."],
+  ["對不起。", "沒關係。", "Sorry. — That's OK."],
+  ["歡迎 歡迎， 請進。", "謝謝。", "Welcome, come in. — Thanks."],
+  ["你 是 哪國人？", "我是印度人。", "Where are you from? — I'm Indian."],
+  ["你的 生日 是 幾月 幾號？", "五月九號。", "When is your birthday? — May 9th."],
+  ["今天 星期幾？", "今天星期三。", "What day is it today? — Wednesday."],
+  ["他 是 誰？", "他是我哥哥。", "Who is he? — He's my older brother."],
+  ["你 有 沒有 兄弟姐妹？", "我有一個姐姐。", "Do you have brothers or sisters? — I have an older sister."],
+  ["你 姓 什麼？", "我姓王。", "What's your surname? — Wang."],
+  ["你 喜歡 喝 什麼？", "我喜歡喝奶茶。", "What do you like to drink? — Milk tea."],
+  ["有 問題 嗎？", "沒有問題。", "Any questions? — No questions."],
+  ["你 要 去 哪國？", "我要去日本。", "Which country are you going to? — Japan."],
+  ["你的 電話號碼 是 幾號？", "零九一二三四五六七八。", "What's your phone number? — 0912345678."],
+  ["那張 照片 好看 嗎？", "很好看。", "Is that photo nice? — Very nice."],
+  ["你 有 幾本 書？", "我有兩本書。", "How many books do you have? — Two."],
+  ["你 喜歡 打球 嗎？", "我很喜歡打球。", "Do you like playing ball? — I love it."],
+].filter(([q, a]) => !usesNotYet(q + a));
+
+// A wrong reply must not contain the right one or sit inside it: 謝謝 vs 好，謝謝.
+const bare = (t) => t.replace(/[，。？！\s]/g, "");
+const overlaps = (a, b) => bare(a).includes(bare(b)) || bare(b).includes(bare(a));
+
+function readReplyCurated() {
+  const [q, a, gloss] = pickOne(READ_QA);
+  const wrong = shuffled([...new Set(READ_QA.map((x) => x[1]))].filter((x) => !overlaps(x, a))).slice(0, 3);
+  const { options, answer } = withOptions(a, wrong);
+  return readEntry("reply", "Pick the best reply", q.slice(0, -1).split(" "), q.slice(-1), options, answer, gloss);
+}
+
+// Dates, weekdays and counts, as on the test's calendar question.
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const ordinal = (n) => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
+const zhNum = (n) => ALL_NUMBERS[n].hanzi;
+const WEEKDAYS = [["一", "Monday"], ["二", "Tuesday"], ["三", "Wednesday"], ["四", "Thursday"], ["五", "Friday"], ["六", "Saturday"], ["天", "Sunday"]];
+
+function readNumber() {
+  const kind = pickOne(["date", "date", "weekday", "count"]);
+  if (kind === "date") {
+    const m = 1 + Math.floor(Math.random() * 12);
+    const d = 1 + Math.floor(Math.random() * 28);
+    const en = (mm, dd) => `${MONTHS[mm - 1]} ${ordinal(dd)}`;
+    const near = [d - 2, d - 1, d + 1, d + 2, d + 10, d - 10].filter((x) => x >= 1 && x <= 28);
+    const wrong = new Set(shuffled(near).slice(0, 2).map((x) => en(m, x)));
+    if (d <= 12 && d !== m) wrong.add(en(d, m)); // month and day swapped
+    wrong.add(en(m === 12 ? 1 : m + 1, d));
+    const { options, answer } = withOptions(en(m, d), shuffled([...wrong]).slice(0, 3));
+    return readEntry("number", "Which date is it?", [`${zhNum(m)}月`, `${zhNum(d)}號`], "", options, answer, en(m, d));
+  }
+  if (kind === "weekday") {
+    const [zh, en] = pickOne(WEEKDAYS);
+    const wrong = shuffled(WEEKDAYS.filter((w) => w[1] !== en)).slice(0, 3).map((w) => w[1]);
+    const { options, answer } = withOptions(en, wrong);
+    return readEntry("number", "Which day is it?", ["今天", `星期${zh}`], "。", options, answer, `Today is ${en}.`);
+  }
+  const n = 2 + Math.floor(Math.random() * 9);
+  const [measure, noun, enNoun] = pickOne([["個", "人", "people in my family"], ["本", "書", "books"], ["張", "照片", "photos"]]);
+  const sentence = noun === "人" ? ["我家", "有", `${n === 2 ? "兩" : zhNum(n)}${measure}`, noun] : ["我", "有", `${n === 2 ? "兩" : zhNum(n)}${measure}`, noun];
+  const enOf = (k) => (noun === "人" ? `There are ${k} ${enNoun}.` : `I have ${k} ${enNoun}.`);
+  const others = shuffled([n - 1, n + 1, n + 2, n - 2, n + 10].filter((k) => k >= 2 && k !== n)).slice(0, 3);
+  const { options, answer } = withOptions(enOf(n), others.map(enOf));
+  return readEntry("number", "What does this mean?", sentence, "。", options, answer, enOf(n));
+}
+
+// One fresh round of reading questions.
+function readingPool(count = 30) {
+  const makers = [readMeaningGenerated, readMeaningGenerated, readMeaningGenerated, readMeaningCurated, readMeaningCurated, readReplyGenerated, readReplyGenerated, readReplyCurated, readNumber, readNumber];
+  const out = [];
+  const seen = new Set();
+  for (let i = 0; i < count * 6 && out.length < count; i++) {
+    const e = pickOne(makers)();
+    if (e && !seen.has(e.hanzi)) {
+      seen.add(e.hanzi);
+      out.push(e);
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // By Class: each class session's new recap-grid characters (the grid diff
 // from one PDF to the next), so a single class can be drilled on its own.
 // A class's deck is its new characters plus every word that only became
@@ -1648,6 +1869,7 @@ const RANGES = {
   homophones: HOMOPHONE_GROUPS,
   combo: COMBO_PAIRS,
   lookalikes: LOOKALIKES,
+  reading: readingPool(),
 };
 
 // Every question object from every pool, keyed by its unique `value`, so a
@@ -1736,6 +1958,7 @@ const state = {
   mistakes: loadMistakes(), // Set of `value`s answered wrong/skipped, persisted
   level: loadLevel(), // Word Order difficulty
   classIndex: loadClass(), // By Class session
+  readMode: loadReadMode(), // Reading: "options" or "open"
   covered: loadCovered(), // By Class progress: { pdf: [value, ...] }
 };
 
@@ -1772,6 +1995,9 @@ function saveBest(val) {
 const card = document.querySelector(".card");
 const hanziDisplay = document.getElementById("hanziDisplay");
 const levelSelect = document.getElementById("levelSelect");
+const readSelect = document.getElementById("readSelect");
+const readLabel = document.getElementById("readLabel");
+const readOptions = document.getElementById("readOptions");
 const classSelect = document.getElementById("classSelect");
 const classPick = document.getElementById("classPick");
 const classNew = document.getElementById("classNew");
@@ -1846,6 +2072,7 @@ function liveTransformInput(e) {
 function drawNext() {
   if (state.deck.length === 0) {
     if (state.range === "sentences") state.pool = sentencePool(state.level);
+    if (state.range === "reading") state.pool = readingPool();
     state.deck = shuffled(state.pool);
     // Don't let a fresh lap start with the item that just ended the last one.
     if (state.current && state.deck.length > 1 && state.deck[0].value === state.current.value) {
@@ -1864,7 +2091,11 @@ function pickNext() {
   state.current = next;
   state.answered = false;
   const sentence = isSentence(next);
+  const reading = isReading(next);
   card.classList.toggle("sentence-mode", sentence);
+  card.classList.toggle("read-mode", reading);
+  if (reading) renderReading(next);
+  else readOptions.replaceChildren();
   if (sentence) {
     hanziDisplay.textContent = "";
     renderSentence(next);
@@ -1880,9 +2111,90 @@ function pickNext() {
   hintBtn.classList.toggle("hidden", !canHint());
   submitBtn.disabled = false;
   pinyinInput.disabled = false;
-  if (!sentence) pinyinInput.focus();
+  if (!sentence && !reading) pinyinInput.focus();
   state.gradedValue = null;
 }
+// ---------------------------------------------------------------------------
+// Reading mode UI: option buttons, or "No options" (reveal, then self-mark).
+// ---------------------------------------------------------------------------
+
+function loadReadMode() {
+  try {
+    return localStorage.getItem(READ_KEY) === "open" ? "open" : "options";
+  } catch {
+    return "options";
+  }
+}
+
+function isReading(entry) {
+  return entry?.kind === "read";
+}
+
+function readButton(text, cls, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = cls;
+  b.textContent = text;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function renderReading(entry) {
+  readLabel.textContent = entry.label;
+  if (state.readMode === "open") {
+    readOptions.replaceChildren(readButton("Show the answer", "btn btn-primary read-reveal", () => revealOpen()));
+    return;
+  }
+  readOptions.replaceChildren(
+    ...entry.options.map((text, i) => {
+      const b = readButton(text, "read-option", () => chooseOption(i));
+      b.lang = entry.readType === "reply" ? "zh-Hant" : "en";
+      b.dataset.key = String(i + 1);
+      return b;
+    }),
+  );
+}
+
+function chooseOption(i) {
+  if (state.answered || !isReading(state.current)) return;
+  const right = state.current.answer;
+  [...readOptions.children].forEach((b, j) => {
+    b.disabled = true;
+    b.classList.toggle("right", j === right);
+    b.classList.toggle("picked-wrong", j === i && i !== right);
+  });
+  gradeAnswer(i === right);
+}
+
+// No options: show the answer, then let the learner say whether they had it.
+function revealOpen() {
+  if (state.answered || !isReading(state.current)) return;
+  const e = state.current;
+  readOptions.replaceChildren(
+    readButton("✓ I got it", "btn btn-primary read-self", () => gradeOpen(true)),
+    readButton("✗ I didn't", "btn btn-ghost read-self", () => gradeOpen(false)),
+  );
+  feedback.className = "feedback";
+  feedback.innerHTML = answerHtml(e) + (e.readType === "reply" ? `<div class="read-answer" lang="zh-Hant">${e.options[e.answer]}</div>` : "");
+}
+
+function gradeOpen(gotIt) {
+  if (state.answered) return;
+  readOptions.replaceChildren();
+  gradeAnswer(gotIt);
+}
+
+function setReadMode(mode) {
+  state.readMode = mode;
+  try {
+    localStorage.setItem(READ_KEY, mode);
+  } catch {
+    /* ignore (e.g. storage disabled) */
+  }
+  [...readSelect.children].forEach((b) => b.classList.toggle("active", b.dataset.read === mode));
+  if (state.range === "reading" && state.current && !state.answered) renderReading(state.current);
+}
+
 
 // ---------------------------------------------------------------------------
 // Word Order tiles. Tap a chunk in the bank to append it to the sentence;
@@ -2156,7 +2468,7 @@ const HINTS = {
 // A memory hint for each character in the answer: after any miss, and
 // always in My Mistakes.
 function appendHints(missed) {
-  if ((!missed && state.range !== "mistakes") || isSentence(state.current)) return;
+  if ((!missed && state.range !== "mistakes") || isSentence(state.current) || isReading(state.current)) return;
   const lines = [...new Set(state.current.hanzi)].filter((ch) => HINTS[ch]).map((ch) => `<div><span class="hint-char">${ch}</span> ${HINTS[ch]}</div>`);
   if (lines.length === 0) return;
   const box = document.createElement("div");
@@ -2225,6 +2537,7 @@ function appendUseCases() {
 // Mistakes pool; getting it right anywhere — including a practice retype —
 // takes it back off.
 function addMistake(value) {
+  if (String(value).startsWith(READ_PREFIX)) return; // Reading cards are generated fresh, not saved
   if (state.mistakes.has(value)) return;
   state.mistakes.add(value);
   saveMistakes();
@@ -2242,6 +2555,16 @@ function clearMistake(value) {
 // For a sentence, `built` picks the reveal for the order actually used, so an
 // accepted alternate shows the learner's own sentence rather than ours.
 function answerHtml(entry, built) {
+  if (isReading(entry)) {
+    const r = entry.reveal;
+    return (
+      `<div class="sentence-reveal">` +
+      `<div class="sentence-hanzi" lang="zh-Hant">${r.hanzi}</div>` +
+      `<div class="sentence-pinyin">${r.pinyinDisplay}</div>` +
+      `<div class="sentence-gloss">${r.gloss}</div>` +
+      `</div>`
+    );
+  }
   if (isSentence(entry)) {
     const v = (built && entry.variants?.[built]) || entry;
     return (
@@ -2348,11 +2671,17 @@ function skipOrReveal() {
   addMistake(state.current.value);
   feedback.className = "feedback wrong";
   feedback.innerHTML = `Skipped — it's ${answerHtml(state.current)}`;
+  if (isReading(state.current)) {
+    if (state.readMode === "open") readOptions.replaceChildren();
+    else [...readOptions.children].forEach((b, j) => ((b.disabled = true), b.classList.toggle("right", j === state.current.answer)));
+  }
   appendUseCases();
   appendHints(true);
   updateStats();
   nextBtn.classList.remove("hidden");
-  if (isSentence(state.current)) {
+  if (isReading(state.current)) {
+    state.gradedValue = null;
+  } else if (isSentence(state.current)) {
     // Tiles stay put so the sentence can still be assembled for practice.
     state.gradedValue = arrangement();
   } else {
@@ -2372,6 +2701,7 @@ function setRange(range) {
   // Only on the Word Order tab — sentences in My Mistakes keep whatever level they were.
   levelSelect.classList.toggle("hidden", range !== "sentences");
   classSelect.classList.toggle("hidden", range !== "classes");
+  readSelect.classList.toggle("hidden", range !== "reading");
   pickNext();
 }
 
@@ -2529,6 +2859,18 @@ sentenceBuilder.addEventListener("click", (e) => {
 // Desktop keyboard for Word Order: Enter checks, Backspace takes back the last
 // placed chunk. Only when nothing else wants the key — not while typing in the
 // lookup box, and not when a button like Skip has focus.
+// Reading: 1-4 picks an option, Enter moves on once answered.
+document.addEventListener("keydown", (e) => {
+  if (!isReading(state.current) || e.target.closest("input, textarea, select")) return;
+  if (!state.answered && /^[1-4]$/.test(e.key) && state.readMode === "options") {
+    const i = Number(e.key) - 1;
+    if (i < state.current.options.length) chooseOption(i);
+  } else if (state.answered && e.key === "Enter" && !e.target.closest("button")) {
+    e.preventDefault();
+    pickNext();
+  }
+});
+
 document.addEventListener("keydown", (e) => {
   if (!isSentence(state.current)) return;
   if (e.target !== document.body && !e.target.closest(".chunk")) return;
@@ -2554,6 +2896,10 @@ rangeSelect.addEventListener("click", (e) => {
 resetMistakesBtn.addEventListener("click", resetMistakes);
 classPick.addEventListener("change", () => setClass(Number(classPick.value)));
 resetClassBtn.addEventListener("click", resetClassCovered);
+readSelect.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-read]");
+  if (btn) setReadMode(btn.dataset.read);
+});
 levelSelect.addEventListener("click", (e) => {
   const btn = e.target.closest(".level-btn");
   if (btn) setLevel(btn.dataset.level);
@@ -2575,4 +2921,5 @@ updateStats();
 updateMistakeCount();
 setLevel(state.level);
 setClass(state.classIndex);
+setReadMode(state.readMode);
 pickNext();

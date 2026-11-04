@@ -11,6 +11,7 @@ where the tone mark sits — for the character shown.
 - **Words** — vocabulary phrases
 - **By Class** — one class session's new characters and the words they make
 - **Word Order** — tap the words into a correct sentence, like the weekly test (Easy / Medium / Hard)
+- **Reading** — read a sentence and pick its meaning or the right reply, like the test's picture questions; or No options to check yourself
 - **Tone Pairs** — characters sharing a syllable but differing in tone, shown together
 - **Look-alikes** — characters that look similar, shown together
 - **Random Mix** — two random characters, real word or not

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
   <div class="app">
@@ -21,6 +21,7 @@
       <button class="range-btn" data-range="words">Words</button>
       <button class="range-btn" data-range="classes">By Class</button>
       <button class="range-btn" data-range="sentences">Word Order</button>
+      <button class="range-btn" data-range="reading">Reading</button>
       <button class="range-btn" data-range="homophones">Tone Pairs</button>
       <button class="range-btn" data-range="lookalikes">Look-alikes</button>
       <button class="range-btn" data-range="combo">Random Mix</button>
@@ -65,6 +66,16 @@
             <span id="classCovered"></span>
             <button type="button" class="btn-link hidden" id="resetClassBtn">Reset</button>
           </p>
+        </div>
+
+        <div class="level-select hidden" id="readSelect" role="group" aria-label="Answer style">
+          <button type="button" class="level-btn" data-read="options">With options</button>
+          <button type="button" class="level-btn" data-read="open">No options</button>
+        </div>
+
+        <div class="read-area">
+          <div class="read-label" id="readLabel"></div>
+          <div class="read-options" id="readOptions"></div>
         </div>
 
         <div class="sentence-builder" id="sentenceBuilder">
@@ -122,6 +133,9 @@
       </p>
       <p>Typed tone marks work too &mdash; <code>sān shí wǔ</code>.</p>
       <p class="modes">
+        <strong>Reading</strong> read a sentence and pick what it means, or the right
+        reply, like the test's picture questions &mdash; or switch to No options and
+        check yourself. Keys 1&ndash;4 pick an answer.
         <strong>Word Order</strong> tap the words into a correct sentence, like the
         weekly test, with new sentences every round. Hard gives long, two-part
         sentences. Tap a placed word to send it back.
@@ -139,6 +153,6 @@
     </footer>
   </div>
 
-  <script src="script.js?v=20"></script>
+  <script src="script.js?v=21"></script>
 </body>
 </html>
