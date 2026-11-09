@@ -15,6 +15,15 @@ up to date when the process changes.
 - [ ] **`NOT_YET` in `script.js`.** Add a new PDF's characters as usual, but list
       any past the latest weekly-test limit ("Till X") in `NOT_YET`: every mode
       hides them and anything using them. Remove them once a test reaches them.
+- [ ] **Words beyond the grid go in as `NOT_YET` too.** Vocabulary the slides
+      teach that the recap grid doesn't have yet (PDF 27's 足球 / 也 / 歲, PDF
+      28's 機器人 / 音樂, PDF 26's IITM and department names) is still added to
+      `WORD_DEFS` (and its example sentences to `SENTENCE_DEFS`), with every new
+      character in `NOT_YET`. When the grid or a test reaches it, take the
+      characters out of `NOT_YET` and add a `CLASSES` entry for them.
+- [ ] **A character with a second reading** (樂: lè in 快樂, yuè in 音樂): word
+      cards use each word's own pinyin, but `sentencePinyin` reads by
+      character, so add a rule there (see 音樂).
 - [ ] **Traditional characters only.**
 - [ ] **Append, never insert.** New entries go at the end of `WORD_DEFS`,
       `LOOKALIKE_DEFS`, `SENTENCE_DEFS` and `CLASSES`. Saved mistakes are stored

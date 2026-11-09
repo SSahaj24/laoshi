@@ -64,8 +64,8 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // with PDF 21, 兄/伯/叔/阿/姨/名/字/書/兩 with PDF 22 (test "till 兩"), and
 // 朋/友 plus the next grid page's 男/女/次/母 with PDF 23, and 太/說/打/球
 // with PDF 24 (test "till 球"), and the ball sports 板/排/籃/桌/棒/羽/毛/網
-// plus 學/大/和 with PDF 25. PDF 26 kept the same grid (系 is only on the
-// department slides, so it stays out).
+// plus 學/大/和 with PDF 25. PDF 26, 27 and 28 kept the same grid; their other
+// words (系, 足球, 踢, 也, 歲, 機器人, 音樂, 聽, 吃 ...) are in, but NOT_YET.
 // Still left out: anything sourced only from
 // title slides or example sentences (e.g. 起 from "一起").
 // Traditional characters throughout. Neutral-tone syllables (e.g. the second
@@ -76,9 +76,11 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // ---------------------------------------------------------------------------
 
 // Characters already in the data below but past the current weekly test
-// ("till 球", PDF 24). Everything using them is left out of every mode. Their
+// ("till 球", PDF 24), then words the slides teach that the recap grid doesn't
+// have yet (PDF 26's IITM / department names, PDF 27-28's 足球 / 也 / 歲 /
+// 音樂 ...). Everything using them is left out of every mode. Their
 // entries stay in the lists so saved ids hold; empty this when a test reaches them.
-const NOT_YET = "板排籃桌棒羽毛網學大和";
+const NOT_YET = "板排籃桌棒羽毛網學大和臉獎金語能力測驗理工院德拉斯分校始系航空應用與物醫程科技土木化資訊設計術械冶材料海洋自介紹錄音作業足踢也歲器聽吃因為硬體言";
 const usesNotYet = (text) => [...text].some((ch) => NOT_YET.includes(ch));
 const syllablesText = (syllables) => syllables.map((s) => s.ch).join("");
 
@@ -265,6 +267,50 @@ const WORD_DEFS = [
   // PDF 26
   [{ ch: "學", accented: "xué" }, { ch: "期", accented: "qí" }], // 學期 semester
   [{ ch: "大", accented: "dà" }, { ch: "家", accented: "jiā" }], // 大家 everyone
+  // PDF 26, beyond the grid (hidden by NOT_YET): the slides' Facebook, scholarship,
+  // TOCFL, IITM and department names, and the assignment's words.
+  [{ ch: "臉", accented: "liǎn" }, { ch: "書", accented: "shū" }], // 臉書 Facebook
+  [{ ch: "獎", accented: "jiǎng" }, { ch: "學", accented: "xué" }, { ch: "金", accented: "jīn" }], // 獎學金 scholarship
+  [{ ch: "台", accented: "tái" }, { ch: "灣", accented: "wān" }, { ch: "獎", accented: "jiǎng" }, { ch: "學", accented: "xué" }, { ch: "金", accented: "jīn" }], // 台灣獎學金 Taiwan Scholarship
+  [{ ch: "華", accented: "huá" }, { ch: "語", accented: "yǔ" }, { ch: "文", accented: "wén" }, { ch: "能", accented: "néng" }, { ch: "力", accented: "lì" }, { ch: "測", accented: "cè" }, { ch: "驗", accented: "yàn" }], // 華語文能力測驗 TOCFL (Test of Chinese as a Foreign Language)
+  [{ ch: "印", accented: "yìn" }, { ch: "度", accented: "dù" }, { ch: "理", accented: "lǐ" }, { ch: "工", accented: "gōng" }, { ch: "學", accented: "xué" }, { ch: "院", accented: "yuàn" }], // 印度理工學院 Indian Institute of Technology
+  [{ ch: "馬", accented: "mǎ" }, { ch: "德", accented: "dé" }, { ch: "拉", accented: "lā" }, { ch: "斯", accented: "sī" }, { ch: "分", accented: "fēn" }, { ch: "校", accented: "xiào" }], // 馬德拉斯分校 Madras campus
+  [{ ch: "開", accented: "kāi" }, { ch: "始", accented: "shǐ" }], // 開始 to start
+  [{ ch: "開", accented: "kāi" }, { ch: "始", accented: "shǐ" }, { ch: "上", accented: "shàng" }, { ch: "課", accented: "kè" }], // 開始上課 start the class
+  [{ ch: "系", accented: "xì" }], // 系 department (at a university)
+  [{ ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 學系 department
+  [{ ch: "航", accented: "háng" }, { ch: "空", accented: "kōng" }, { ch: "太", accented: "tài" }, { ch: "空", accented: "kōng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 航空太空學系 Aerospace Engineering (AE)
+  [{ ch: "應", accented: "yìng" }, { ch: "用", accented: "yòng" }, { ch: "力", accented: "lì" }, { ch: "學", accented: "xué" }, { ch: "與", accented: "yǔ" }, { ch: "生", accented: "shēng" }, { ch: "物", accented: "wù" }, { ch: "醫", accented: "yī" }, { ch: "學", accented: "xué" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 應用力學與生物醫學工程學系 Applied Mechanics and Biomedical Engineering (AM)
+  [{ ch: "生", accented: "shēng" }, { ch: "物", accented: "wù" }, { ch: "科", accented: "kē" }, { ch: "技", accented: "jì" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 生物科技學系 Biotechnology (BE)
+  [{ ch: "土", accented: "tǔ" }, { ch: "木", accented: "mù" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 土木工程學系 Civil Engineering (CE)
+  [{ ch: "化", accented: "huà" }, { ch: "學", accented: "xué" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 化學工程學系 Chemical Engineering (CH)
+  [{ ch: "資", accented: "zī" }, { ch: "訊", accented: "xùn" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 資訊工程學系 Computer Science and Engineering (CS)
+  [{ ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "設", accented: "shè" }, { ch: "計", accented: "jì" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 工程設計學系 Engineering Design (ED)
+  [{ ch: "電", accented: "diàn" }, { ch: "機", accented: "jī" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 電機工程學系 Electrical Engineering (EE)
+  [{ ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "物", accented: "wù" }, { ch: "理", accented: "lǐ" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 工程物理學系 Engineering Physics (EP)
+  [{ ch: "醫", accented: "yī" }, { ch: "學", accented: "xué" }, { ch: "科", accented: "kē" }, { ch: "學", accented: "xué" }, { ch: "與", accented: "yǔ" }, { ch: "技", accented: "jì" }, { ch: "術", accented: "shù" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 醫學科學與技術學系 Medical Sciences and Technology (MD)
+  [{ ch: "機", accented: "jī" }, { ch: "械", accented: "xiè" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 機械工程學系 Mechanical Engineering (ME)
+  [{ ch: "冶", accented: "yě" }, { ch: "金", accented: "jīn" }, { ch: "與", accented: "yǔ" }, { ch: "材", accented: "cái" }, { ch: "料", accented: "liào" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 冶金與材料工程學系 Metallurgical and Materials Engineering (MM)
+  [{ ch: "海", accented: "hǎi" }, { ch: "洋", accented: "yáng" }, { ch: "工", accented: "gōng" }, { ch: "程", accented: "chéng" }, { ch: "學", accented: "xué" }, { ch: "系", accented: "xì" }], // 海洋工程學系 Ocean Engineering (OE)
+  [{ ch: "自", accented: "zì" }, { ch: "我", accented: "wǒ" }, { ch: "介", accented: "jiè" }, { ch: "紹", accented: "shào" }], // 自我介紹 self-introduction
+  [{ ch: "錄", accented: "lù" }, { ch: "音", accented: "yīn" }], // 錄音 recording
+  [{ ch: "作", accented: "zuò" }, { ch: "業", accented: "yè" }], // 作業 assignment, homework
+  // PDF 27 (no new grid characters; all hidden by NOT_YET)
+  [{ ch: "足", accented: "zú" }, { ch: "球", accented: "qiú" }], // 足球 soccer
+  [{ ch: "踢", accented: "tī" }], // 踢 to kick
+  [{ ch: "踢", accented: "tī" }, { ch: "足", accented: "zú" }, { ch: "球", accented: "qiú" }], // 踢足球 to play soccer
+  [{ ch: "也", accented: "yě" }], // 也 also
+  [{ ch: "歲", accented: "suì" }], // 歲 years old (age)
+  [{ ch: "幾", accented: "jǐ" }, { ch: "歲", accented: "suì" }], // 幾歲 how old
+  // PDF 28 (no new grid characters; all hidden by NOT_YET)
+  [{ ch: "機", accented: "jī" }, { ch: "器", accented: "qì" }, { ch: "人", accented: "rén" }], // 機器人 robot
+  [{ ch: "音", accented: "yīn" }, { ch: "樂", accented: "yuè" }], // 音樂 music
+  [{ ch: "聽", accented: "tīng" }], // 聽 to listen
+  [{ ch: "聽", accented: "tīng" }, { ch: "音", accented: "yīn" }, { ch: "樂", accented: "yuè" }], // 聽音樂 to listen to music
+  [{ ch: "吃", accented: "chī" }], // 吃 to eat
+  [{ ch: "因", accented: "yīn" }, { ch: "為", accented: "wèi" }], // 因為 because
+  [{ ch: "硬", accented: "yìng" }, { ch: "體", accented: "tǐ" }], // 硬體 hardware
+  [{ ch: "語", accented: "yǔ" }, { ch: "言", accented: "yán" }], // 語言 language
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`)).filter((w) => !usesNotYet(w.hanzi));
@@ -502,6 +548,12 @@ const LOOKALIKE_DEFS = [
   { chars: "和秋", note: "Both have 禾 (grain) on the left." },
   { chars: "學字", note: "Both have 子 (child) at the bottom." },
   { chars: "毛手", note: "毛's last stroke curls right; 手's hooks left." },
+  // PDF 27-28
+  { chars: "也她他", note: "也 alone, then on the right of 她 and 他." },
+  { chars: "踢足", note: "踢 has 足 (foot) squeezed onto its left." },
+  { chars: "語說話", note: "All have 訁 (speech) on the left." },
+  { chars: "吃喝", note: "Both have 口 (mouth) on the left." },
+  { chars: "因國", note: "Both are boxed in by 口." },
 ];
 
 const LOOKALIKES = LOOKALIKE_DEFS.map((def, i) => {
@@ -863,6 +915,29 @@ const SENTENCE_DEFS = [
     gloss: "Today I'm playing ball with a friend.",
   },
   { chunks: ["我爸爸", "和", "媽媽", "都", "是", "台灣人"], end: "。", gloss: "My dad and mom are both Taiwanese." },
+  // PDF 27: the 足球 / 踢 / 也 / 歲 example sentences (hidden while NOT_YET).
+  {
+    chunks: ["明天", "叔叔", "要", "去", "踢", "足球"],
+    alts: [["叔叔", "明天", "要", "去", "踢", "足球"]],
+    end: "。",
+    gloss: "Uncle is going to play soccer tomorrow.",
+  },
+  { chunks: ["安同", "不", "喜歡", "踢", "足球"], end: "。", gloss: "Antong doesn't like playing soccer." },
+  { chunks: ["印度人", "喜歡", "踢", "足球", "嗎"], end: "？", gloss: "Do Indians like playing soccer?" },
+  { chunks: ["哥哥", "喜歡", "打", "網球，", "也", "喜歡", "踢", "足球"], end: "。", gloss: "My older brother likes playing tennis, and also likes playing soccer." },
+  { chunks: ["開文的", "姐姐", "也", "是", "老師"], end: "。", gloss: "Kaiwen's older sister is also a teacher." },
+  {
+    chunks: ["我", "今天", "也", "沒有", "課"],
+    alts: [["今天", "我", "也", "沒有", "課"]],
+    end: "。",
+    gloss: "I don't have class today either.",
+  },
+  { chunks: ["昨天", "是", "妹妹", "十歲的", "生日"], end: "。", gloss: "Yesterday was my younger sister's 10th birthday." },
+  { chunks: ["我們", "兩個人", "都", "是", "二十一歲"], end: "。", gloss: "We're both 21." },
+  { chunks: ["你", "幾", "歲"], end: "？", gloss: "How old are you?" },
+  // PDF 26: the department question.
+  { chunks: ["你", "是", "什麼", "系的", "學生"], end: "？", gloss: "Which department are you a student in?" },
+  { chunks: ["你", "是", "哪個", "系的", "學生"], end: "？", gloss: "Which department are you a student in?" },
 ];
 
 const CHAR_PINYIN = new Map(CHAR_INDEX.map((e) => [e.ch, e.accented]));
@@ -879,6 +954,7 @@ function sentencePinyin(chunks, end) {
     // 一 before a measure word: yí before a 4th tone (次, and 個, underlyingly
     // gè), yì before 本 / 張 / 節 and in 一起. Elsewhere (誠一, 星期一) it stays yī, and so
     // does an ordinal: 第一次 is dì yī cì.
+    if (ch === "樂" && chars[i - 1] === "音") syl[i] = "yuè"; // 音樂 yīnyuè, but 快樂 kuàilè
     if (ch === "一" && chars[i - 1] !== "第" && chars[i + 1] && "個本張次節起".includes(chars[i + 1]))
       syl[i] = "個次".includes(chars[i + 1]) ? "yí" : "yì";
   });
@@ -2345,6 +2421,21 @@ const HINTS = {
   起: "走 (walk) — get up and go: to rise.",
   關: "門 (door) — closing the door.",
   係: "亻 + 系 (xì), which gives the sound xi.",
+  系: "Threads (糸) hanging from a line: things tied together, like a department.",
+  足: "A foot: 口 (the knee) over 止 (a footprint).",
+  踢: "⻊ (foot) + 易 (yì): you kick with your foot.",
+  也: "Also the right side of 她 (she) and 他 (he).",
+  歲: "止 (step) on top, 戌 underneath: the steps of the years.",
+  器: "Four 口 (mouths) around 犬 (dog): many vessels, guarded.",
+  音: "立 (stand) over 日: a sound coming out.",
+  聽: "耳 (ear) on the left: you listen with your ear.",
+  吃: "口 (mouth) + 乞 (qǐ): you eat with your mouth.",
+  因: "大 (a person) inside 口 (an enclosure): the reason behind something.",
+  為: "Ends in four dots (灬), like a lot of busy work.",
+  硬: "石 (stone) + 更 (gèng): hard like stone.",
+  體: "骨 (bone) on the left: the body.",
+  語: "訁 (speech) + 吾 (wú): language is speech.",
+  言: "Speech: a mouth (口) under lines of words. It is the full form of 訁.",
   上: "The stroke points up from the line.",
   下: "The stroke hangs down from the line.",
   課: "訁 (speech) — a lesson is spoken.",
