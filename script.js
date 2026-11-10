@@ -80,7 +80,7 @@ const ALL_NUMBERS = Array.from({ length: 100 }, (_, n) => buildNumber(n));
 // have yet (PDF 26's IITM / department names, PDF 27-28's 足球 / 也 / 歲 /
 // 音樂 ...). Everything using them is left out of every mode. Their
 // entries stay in the lists so saved ids hold; empty this when a test reaches them.
-const NOT_YET = "板排籃桌棒羽毛網學大和臉獎金語能力測驗理工院德拉斯分校始系航空應用與物醫程科技土木化資訊設計術械冶材料海洋自介紹錄音作業足踢也歲器聽吃因為硬體言";
+const NOT_YET = "板排籃桌棒羽毛網學大和臉獎金語能力測驗理工院德拉斯分校始系航空應用與物醫程科技土木化資訊設計術械冶材料海洋自介紹錄音作業足踢也歲器聽吃因為硬體言袁筱惠";
 const usesNotYet = (text) => [...text].some((ch) => NOT_YET.includes(ch));
 const syllablesText = (syllables) => syllables.map((s) => s.ch).join("");
 
@@ -311,6 +311,9 @@ const WORD_DEFS = [
   [{ ch: "因", accented: "yīn" }, { ch: "為", accented: "wèi" }], // 因為 because
   [{ ch: "硬", accented: "yìng" }, { ch: "體", accented: "tǐ" }], // 硬體 hardware
   [{ ch: "語", accented: "yǔ" }, { ch: "言", accented: "yán" }], // 語言 language
+  // The teacher's name, from the title slides (hidden by NOT_YET: not in the grid)
+  [{ ch: "袁", accented: "yuán" }, { ch: "筱", accented: "xiǎo" }, { ch: "惠", accented: "huì" }], // 袁筱惠 (the teacher's name)
+  [{ ch: "袁", accented: "yuán" }, { ch: "老", accented: "lǎo" }, { ch: "師", accented: "shī" }], // 袁老師 Teacher Yuan
 ];
 
 const WORDS = WORD_DEFS.map((syllables, i) => makeEntry(syllables, `word-${i}`)).filter((w) => !usesNotYet(w.hanzi));
